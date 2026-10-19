@@ -1,0 +1,17 @@
+{
+  "type": "create:compacting",
+  "ingredients": [
+    {
+      "item": "irons_spellbooks:arcane_essence"
+    },
+    {
+      "fluid": "irons_spellbooks:blood",
+      "amount": 250
+    }
+  ],
+  "results": [
+    {
+      "item": "arcane_industry:crimson_essence"
+    }
+  ]
+}

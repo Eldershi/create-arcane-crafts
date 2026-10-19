@@ -1,0 +1,17 @@
+{
+  "type": "create:emptying",
+  "ingredients": [
+    {
+      "item": "arcane_industry:arcane_solution_bottle"
+    }
+  ],
+  "results": [
+    {
+      "item": "minecraft:glass_bottle"
+    },
+    {
+      "fluid": "arcane_industry:arcane_solution",
+      "amount": 250
+    }
+  ]
+}

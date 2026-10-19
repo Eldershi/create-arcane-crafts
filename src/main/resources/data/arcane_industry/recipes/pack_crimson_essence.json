@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "EEE",
+    "EEE",
+    "EEE"
+  ],
+  "key": {
+    "E": {
+      "item": "arcane_industry:crimson_essence"
+    }
+  },
+  "result": {
+    "item": "arcane_industry:crimson_essence_block"
+  }
+}

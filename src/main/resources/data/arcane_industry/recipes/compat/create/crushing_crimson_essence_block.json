@@ -1,0 +1,15 @@
+{
+  "type": "create:crushing",
+  "ingredients": [
+    {
+      "item": "arcane_industry:crimson_essence_block"
+    }
+  ],
+  "processingTime": 200,
+  "results": [
+    {
+      "item": "arcane_industry:crimson_essence",
+      "count": 9
+    }
+  ]
+}

@@ -1,0 +1,56 @@
+modLoader="javafml"
+loaderVersion="[47,48)"
+license="All Rights Reserved; MIT/LGPL exceptions in LICENSE.md"
+issueTrackerURL="https://github.com/Eldershi/create-arcane-crafts/issues"
+[[mods]]
+modId="arcane_industry"
+version="0.1.0"
+displayName="机械动力：奥术工艺"
+displayURL="https://github.com/Eldershi/create-arcane-crafts"
+authors="Expedition"
+description='''奥术升华室、原液工业与铁魔法补给。Minecraft 1.20.1 Forge 功能原型。
+非 Minecraft 官方产品，未经 Mojang 或 Microsoft 批准，也与其无关联。
+NOT AN OFFICIAL MINECRAFT PRODUCT. NOT APPROVED BY OR ASSOCIATED WITH MOJANG OR MICROSOFT.
+维护：Eldershi；反馈：https://github.com/Eldershi/create-arcane-crafts/issues 。第三方来源与适用许可见 THIRD_PARTY_NOTICES.md。'''
+[[dependencies.arcane_industry]]
+modId="forge"
+mandatory=true
+versionRange="[47.4.0,48)"
+ordering="NONE"
+side="BOTH"
+[[dependencies.arcane_industry]]
+modId="minecraft"
+mandatory=true
+versionRange="[1.20.1]"
+ordering="NONE"
+side="BOTH"
+[[dependencies.arcane_industry]]
+modId="create"
+mandatory=true
+versionRange="[6.0.8,6.1)"
+ordering="AFTER"
+side="BOTH"
+[[dependencies.arcane_industry]]
+modId="create_enchantment_industry"
+mandatory=true
+versionRange="[2.5.4,2.6)"
+ordering="AFTER"
+side="BOTH"
+[[dependencies.arcane_industry]]
+modId="irons_spellbooks"
+mandatory=true
+versionRange="[1.20.1-3.16.3]"
+ordering="AFTER"
+side="BOTH"
+[[dependencies.arcane_industry]]
+modId="sophisticatedbackpacks"
+mandatory=true
+versionRange="[3.26,4)"
+ordering="AFTER"
+side="BOTH"
+[[dependencies.arcane_industry]]
+modId="jei"
+mandatory=false
+versionRange="[15,16)"
+ordering="AFTER"
+side="CLIENT"

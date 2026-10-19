@@ -1,0 +1,7 @@
+Gradle Wrapper
+Copyright 2015-2021 the original authors.
+
+Wrapper scripts and JAR are from the official Minecraft Forge
+1.20.1-47.4.10 MDK and are part of the Gradle project:
+https://github.com/gradle/gradle
+Licensed under Apache License 2.0; see LICENSE in this directory.

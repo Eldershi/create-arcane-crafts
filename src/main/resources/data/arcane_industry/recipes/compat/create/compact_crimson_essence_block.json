@@ -1,0 +1,37 @@
+{
+  "type": "create:compacting",
+  "ingredients": [
+    {
+      "item": "arcane_industry:crimson_essence"
+    },
+    {
+      "item": "arcane_industry:crimson_essence"
+    },
+    {
+      "item": "arcane_industry:crimson_essence"
+    },
+    {
+      "item": "arcane_industry:crimson_essence"
+    },
+    {
+      "item": "arcane_industry:crimson_essence"
+    },
+    {
+      "item": "arcane_industry:crimson_essence"
+    },
+    {
+      "item": "arcane_industry:crimson_essence"
+    },
+    {
+      "item": "arcane_industry:crimson_essence"
+    },
+    {
+      "item": "arcane_industry:crimson_essence"
+    }
+  ],
+  "results": [
+    {
+      "item": "arcane_industry:crimson_essence_block"
+    }
+  ]
+}

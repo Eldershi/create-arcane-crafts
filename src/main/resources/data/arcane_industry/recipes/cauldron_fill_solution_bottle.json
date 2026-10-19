@@ -1,0 +1,13 @@
+{
+  "type": "irons_spellbooks:alchemist_cauldron_fill",
+  "fluid": {
+    "FluidName": "arcane_industry:arcane_solution",
+    "Amount": 250
+  },
+  "input": {
+    "item": "arcane_industry:arcane_solution_bottle"
+  },
+  "result": {
+    "item": "minecraft:glass_bottle"
+  }
+}

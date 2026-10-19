@@ -1,0 +1,14 @@
+{
+  "type": "create:compacting",
+  "ingredients": [
+    {
+      "fluid": "arcane_industry:arcane_solution",
+      "amount": 250
+    }
+  ],
+  "results": [
+    {
+      "item": "irons_spellbooks:arcane_essence"
+    }
+  ]
+}

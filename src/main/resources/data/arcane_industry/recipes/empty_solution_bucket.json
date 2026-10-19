@@ -1,0 +1,17 @@
+{
+  "type": "create:emptying",
+  "ingredients": [
+    {
+      "item": "arcane_industry:arcane_solution_bucket"
+    }
+  ],
+  "results": [
+    {
+      "item": "minecraft:bucket"
+    },
+    {
+      "fluid": "arcane_industry:arcane_solution",
+      "amount": 1000
+    }
+  ]
+}

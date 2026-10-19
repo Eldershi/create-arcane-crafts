@@ -1,0 +1,15 @@
+{
+  "type": "create:milling",
+  "ingredients": [
+    {
+      "item": "arcane_industry:arcane_essence_block"
+    }
+  ],
+  "processingTime": 100,
+  "results": [
+    {
+      "item": "irons_spellbooks:arcane_essence",
+      "count": 9
+    }
+  ]
+}

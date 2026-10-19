@@ -1,0 +1,14 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    {
+      "item": "arcane_industry:arcane_grindstone"
+    },
+    {
+      "item": "create:item_drain"
+    }
+  ],
+  "result": {
+    "item": "arcane_industry:arcane_grindstone_drain"
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "type": "create:mixing",
+  "ingredients": [
+    {
+      "fluid": "irons_spellbooks:common_ink",
+      "amount": 1000
+    },
+    {
+      "tag": "forge:ingots/copper"
+    }
+  ],
+  "results": [
+    {
+      "fluid": "irons_spellbooks:uncommon_ink",
+      "amount": 250
+    }
+  ]
+}

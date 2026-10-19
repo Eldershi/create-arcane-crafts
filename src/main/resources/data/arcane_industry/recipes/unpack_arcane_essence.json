@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    {
+      "item": "arcane_industry:arcane_essence_block"
+    }
+  ],
+  "result": {
+    "item": "irons_spellbooks:arcane_essence",
+    "count": 9
+  }
+}

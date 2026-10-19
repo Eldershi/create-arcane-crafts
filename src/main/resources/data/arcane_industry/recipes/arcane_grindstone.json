@@ -1,0 +1,14 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    {
+      "item": "create_enchantment_industry:mechanical_grindstone"
+    },
+    {
+      "item": "irons_spellbooks:mithril_ingot"
+    }
+  ],
+  "result": {
+    "item": "arcane_industry:arcane_grindstone"
+  }
+}

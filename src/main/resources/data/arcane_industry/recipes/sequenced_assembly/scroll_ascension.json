@@ -1,0 +1,23 @@
+{
+  "type": "create:sequenced_assembly",
+  "ingredient": {"item": "irons_spellbooks:scroll"},
+  "transitionalItem": {"item": "arcane_industry:unfinished_ascension_scroll"},
+  "sequence": [
+    {
+      "type": "arcane_industry:scroll_ascension_inking",
+      "ingredients": [
+        {"item": "irons_spellbooks:scroll"},
+        {"fluid": "irons_spellbooks:common_ink", "amount": 250}
+      ],
+      "results": [{"item": "arcane_industry:unfinished_ascension_scroll"}]
+    },
+    {
+      "type": "arcane_industry:ascension_assembly",
+      "ingredients": [{"item": "arcane_industry:unfinished_ascension_scroll"}],
+      "results": [{"item": "irons_spellbooks:scroll"}],
+      "processingTime": 80
+    }
+  ],
+  "results": [{"item": "irons_spellbooks:scroll"}],
+  "loops": 1
+}

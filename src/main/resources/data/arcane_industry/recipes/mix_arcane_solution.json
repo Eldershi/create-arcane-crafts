@@ -1,0 +1,18 @@
+{
+  "type": "create:mixing",
+  "ingredients": [
+    {
+      "fluid": "minecraft:water",
+      "amount": 250
+    },
+    {
+      "item": "irons_spellbooks:arcane_essence"
+    }
+  ],
+  "results": [
+    {
+      "fluid": "arcane_industry:arcane_solution",
+      "amount": 250
+    }
+  ]
+}

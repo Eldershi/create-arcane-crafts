@@ -1,0 +1,37 @@
+{
+  "minecraft": "1.20.1",
+  "forge": "47.4.10",
+  "java": 17,
+  "gradle": "8.8",
+  "forgeGradle": "6.0.42",
+  "standardBuild": "PASS",
+  "productionReobfuscation": "PASS",
+  "mixinConfigAndRefmap": "PASS",
+  "bundledOriginalPngCount": 8,
+  "bundledDependencyJars": 0,
+  "bundledDerivedObjOrMtl": 0,
+  "textures": {
+    "count": 75,
+    "rgbaPixels": 218112,
+    "differences": 0
+  },
+  "books": {
+    "count": 13,
+    "floatValues": 26592,
+    "bitDifferences": 0
+  },
+  "models": {
+    "jsonResources": 6,
+    "inventoryQuads": 98,
+    "differences": 0,
+    "tolerance": 1e-07
+  },
+  "nativeAnvilPostconditions": {
+    "assertions": 20,
+    "result": "PASS"
+  },
+  "gameClientStarted": false,
+  "gameServerStarted": false,
+  "gameTestsRun": false,
+  "jarSha256": "d058deb6b023bd8042908c2aa767aac0cf11a05c5eefa19cb6a58bb97f83b0bc"
+}

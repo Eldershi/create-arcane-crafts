@@ -1,0 +1,18 @@
+{
+  "type": "create:mixing",
+  "ingredients": [
+    {
+      "fluid": "arcane_industry:arcane_solution",
+      "amount": 250
+    },
+    {
+      "item": "minecraft:ink_sac"
+    }
+  ],
+  "results": [
+    {
+      "fluid": "irons_spellbooks:common_ink",
+      "amount": 250
+    }
+  ]
+}

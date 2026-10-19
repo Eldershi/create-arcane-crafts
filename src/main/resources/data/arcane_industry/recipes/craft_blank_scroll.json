@@ -1,0 +1,8 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    { "item": "minecraft:paper" },
+    { "item": "minecraft:string" }
+  ],
+  "result": { "item": "irons_spellbooks:scroll" }
+}

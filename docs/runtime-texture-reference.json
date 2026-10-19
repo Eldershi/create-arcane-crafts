@@ -1,0 +1,483 @@
+{
+  "format": "RGBA bytes, row-major, original width and height; SHA-256",
+  "dependencyVersions": {
+    "minecraft": "1.20.1",
+    "create": "6.0.8",
+    "create_enchantment_industry": "2.5.4b",
+    "irons_spellbooks": "3.16.3",
+    "sophisticatedbackpacks": "3.26.9.2194"
+  },
+  "textures": {
+    "textures/block/arcane_essence_block.png": {
+      "width": 16,
+      "height": 256,
+      "rgbaSha256": "a4d801317be8e83225788b19793c418db7e6d83d3ab79d457140f29b6041b78b"
+    },
+    "textures/block/crimson_essence_block.png": {
+      "width": 16,
+      "height": 256,
+      "rgbaSha256": "187ea4a6cf0395535808e8c6a30ec034a622c0eb01f00fd67ec705c2bcb4dda8"
+    },
+    "textures/block/arcane_hatch.png": {
+      "width": 32,
+      "height": 32,
+      "rgbaSha256": "42e39f7c41fa4d839b3e495222816642893e76151ad79e5ce7fb274a1201b7d1"
+    },
+    "textures/block/arcane_hatch_open.png": {
+      "width": 16,
+      "height": 16,
+      "rgbaSha256": "3fe1846e2d06b3d9691bce036e9636bab1d4e0bcdfaf9aab15cd1ca755e8c4ed"
+    },
+    "textures/block/cage.png": {
+      "width": 32,
+      "height": 32,
+      "rgbaSha256": "a8d5c861e90298920b21aa5e21b7d2ecaeaa8a4719a4c8dc2bf4266f84bb2faf"
+    },
+    "textures/block/chamber_brass.png": {
+      "width": 16,
+      "height": 16,
+      "rgbaSha256": "797f03e56d1b54314b140ac58f0e3058166a8c82d4d9e5246e4edecdc89a1d6d"
+    },
+    "textures/block/chamber_amethyst.png": {
+      "width": 16,
+      "height": 16,
+      "rgbaSha256": "70a6281e0d72838811be69bf2cece5da164b39dad7d5303157d6e43d70609da5"
+    },
+    "textures/item/ascension_template.png": {
+      "width": 16,
+      "height": 16,
+      "rgbaSha256": "f9e7b34b46679766e01d7ca0c6a5882e852eef0f41aca03d81c6ef51b18870fa"
+    },
+    "textures/item/crimson_essence.png": {
+      "width": 16,
+      "height": 16,
+      "rgbaSha256": "6ce070585d79653f0b5fed4a8e363d86bd0989644962e78d517de490bad55703"
+    },
+    "textures/item/arcane_solution_bucket.png": {
+      "width": 16,
+      "height": 16,
+      "rgbaSha256": "13621ece09efdb6cc870ae28dcf67f41e9a9b44d4ae85509483fad9afc749a9c"
+    },
+    "textures/item/crimson_solution_bucket.png": {
+      "width": 16,
+      "height": 16,
+      "rgbaSha256": "e8937c8d6b38359b969a501ae98810ab716ef59e1d64b9ab8ff54197330cf95b"
+    },
+    "textures/item/ember_cake.png": {
+      "width": 16,
+      "height": 16,
+      "rgbaSha256": "57c2ebef1b97130520bc289c774e6e4808c439ab5697dd51c2153ca643389fe3"
+    },
+    "textures/item/ember_cake_base.png": {
+      "width": 16,
+      "height": 16,
+      "rgbaSha256": "dba53316d5bd29b178d4810749275ec3bec26d7559710f94d60be0b42f709e00"
+    },
+    "textures/item/uninked_scroll.png": {
+      "width": 16,
+      "height": 16,
+      "rgbaSha256": "936fdd0e2b24f9b939c5dfcb4e2f1476bb2476e3435d049fa7f760a801572efb"
+    },
+    "textures/entity/chamber/chamber_rods_active.png": {
+      "width": 16,
+      "height": 16,
+      "rgbaSha256": "782e5e655f016fb55653a0c9bb83255ee67368c89c9d903fcf034c158acbbd63"
+    },
+    "textures/entity/chamber/flame_active.png": {
+      "width": 32,
+      "height": 32,
+      "rgbaSha256": "7e2c96a1eadadc22e841658542480f76c6bde64752fee0632671db36c7a78f74"
+    },
+    "textures/entity/chamber/flame_super.png": {
+      "width": 32,
+      "height": 32,
+      "rgbaSha256": "7a81835d23ffdf2324c4843d4df55b83fe924cc2290f0947e420b57ee7505c99"
+    },
+    "textures/block/chamber_skins/brass_cage.png": {
+      "width": 32,
+      "height": 32,
+      "rgbaSha256": "a8d5c861e90298920b21aa5e21b7d2ecaeaa8a4719a4c8dc2bf4266f84bb2faf"
+    },
+    "textures/block/chamber_skins/brass_base_wrap.png": {
+      "width": 32,
+      "height": 32,
+      "rgbaSha256": "a8d5c861e90298920b21aa5e21b7d2ecaeaa8a4719a4c8dc2bf4266f84bb2faf"
+    },
+    "textures/block/chamber_skins/mithril_base_wrap.png": {
+      "width": 32,
+      "height": 32,
+      "rgbaSha256": "c5c23654258f30cdc46aa5ec4eef06f57c133650dacc6167830acf041f8fd539"
+    },
+    "textures/block/arcane_solution_still.png": {
+      "width": 16,
+      "height": 512,
+      "rgbaSha256": "909f895c52750a8f4acc77db26410802b48b4d9e333387976fdd6728d7f78ee8"
+    },
+    "textures/block/arcane_solution_flow.png": {
+      "width": 32,
+      "height": 1024,
+      "rgbaSha256": "1fe3f1293d5ae4be05f742f89b76d291c0b3b74af05101860a6b6a2cecc04f4e"
+    },
+    "textures/block/crimson_solution_still.png": {
+      "width": 16,
+      "height": 512,
+      "rgbaSha256": "d0661a8020255ec92f6d984a696a25c0acfcb7beb4dcee571b9e80fe9ddc4373"
+    },
+    "textures/block/crimson_solution_flow.png": {
+      "width": 32,
+      "height": 1024,
+      "rgbaSha256": "b62639619851bc1d097a233ac34c73f0c4648a85156b20c2b9db3b84f32f13d2"
+    },
+    "textures/block/ink/common_still.png": {
+      "width": 16,
+      "height": 512,
+      "rgbaSha256": "28aa8e6d058f286230aa634ac348a0e75d9dfd1598225f4584d30ed22c55ffdb"
+    },
+    "textures/block/ink/common_flow.png": {
+      "width": 16,
+      "height": 512,
+      "rgbaSha256": "28aa8e6d058f286230aa634ac348a0e75d9dfd1598225f4584d30ed22c55ffdb"
+    },
+    "textures/block/ink/uncommon_still.png": {
+      "width": 16,
+      "height": 512,
+      "rgbaSha256": "000e75edf0fd9fe17f29e8c1bb005758b7510713a611f68de7c507e6c82b25c3"
+    },
+    "textures/block/ink/uncommon_flow.png": {
+      "width": 16,
+      "height": 512,
+      "rgbaSha256": "000e75edf0fd9fe17f29e8c1bb005758b7510713a611f68de7c507e6c82b25c3"
+    },
+    "textures/block/ink/rare_still.png": {
+      "width": 16,
+      "height": 512,
+      "rgbaSha256": "7a9ede3415fa392cc42ed67eef314ea8ed70cc49e26d311dff7620ce60d4cb80"
+    },
+    "textures/block/ink/rare_flow.png": {
+      "width": 16,
+      "height": 512,
+      "rgbaSha256": "7a9ede3415fa392cc42ed67eef314ea8ed70cc49e26d311dff7620ce60d4cb80"
+    },
+    "textures/block/ink/epic_still.png": {
+      "width": 16,
+      "height": 512,
+      "rgbaSha256": "50d7274dc5b30373918bbed022e4fe74862268d45c95370104220f16a2b99787"
+    },
+    "textures/block/ink/epic_flow.png": {
+      "width": 16,
+      "height": 512,
+      "rgbaSha256": "50d7274dc5b30373918bbed022e4fe74862268d45c95370104220f16a2b99787"
+    },
+    "textures/block/ink/legendary_still.png": {
+      "width": 16,
+      "height": 512,
+      "rgbaSha256": "23edab6693a822a0f3f69de55b1274ce7605f20714cbc6d70230d320bb16e4c1"
+    },
+    "textures/block/ink/legendary_flow.png": {
+      "width": 16,
+      "height": 512,
+      "rgbaSha256": "23edab6693a822a0f3f69de55b1274ce7605f20714cbc6d70230d320bb16e4c1"
+    },
+    "textures/particle/ascension_cleanse_blue_1.png": {
+      "width": 8,
+      "height": 8,
+      "rgbaSha256": "a07d9e0e32069156317f2b844df2fae5a1ae341cc31af5e9a030a98598295979"
+    },
+    "textures/particle/ascension_cleanse_blue_2.png": {
+      "width": 8,
+      "height": 8,
+      "rgbaSha256": "3d2d7c8b52bbb9a1311c6e0a50fe7709e3ef55b4839087f5dccbd6e0a4154aaf"
+    },
+    "textures/particle/ascension_cleanse_blue_3.png": {
+      "width": 8,
+      "height": 8,
+      "rgbaSha256": "ba341cfdf3b72adc182512599c9dbeb0abefc6e8c3aa43f711e0813847e06d54"
+    },
+    "textures/particle/ascension_cleanse_blue_4.png": {
+      "width": 8,
+      "height": 8,
+      "rgbaSha256": "b197380a4823619eba41b4bb161a70742ef274ddb660d261c2caf866e7b70a0a"
+    },
+    "textures/particle/ascension_cleanse_gold_1.png": {
+      "width": 8,
+      "height": 8,
+      "rgbaSha256": "3228740f045feb12a44f5a1b0e77abab94242fe45ee2e889c888d5ec84c8e934"
+    },
+    "textures/particle/ascension_cleanse_gold_2.png": {
+      "width": 8,
+      "height": 8,
+      "rgbaSha256": "2d1c97ff9250807fa8b58fc520af5de69fdea6647621329de5b5753f76139cdf"
+    },
+    "textures/particle/ascension_cleanse_gold_3.png": {
+      "width": 8,
+      "height": 8,
+      "rgbaSha256": "946552b1d17a05c0653375f37b1de9909a5719fd8982f09df382940b16469177"
+    },
+    "textures/particle/ascension_cleanse_gold_4.png": {
+      "width": 8,
+      "height": 8,
+      "rgbaSha256": "28532bcecb398dab58bdb9c6e6d4bd1083196dc5d69f65ceff389b8a5c9345da"
+    },
+    "textures/item/arcane_solution_bottle.png": {
+      "width": 16,
+      "height": 16,
+      "rgbaSha256": "1074fa8c28a155f1c4847919c60a0bd74f6a0bcc8fca7723f9bbea8b83e722bd"
+    },
+    "textures/item/crimson_solution_bottle.png": {
+      "width": 16,
+      "height": 16,
+      "rgbaSha256": "1602b171ed39ff4825d4e44101836523b684df9ee70c32a7e6d226016bfa0417"
+    },
+    "textures/item/mana_supply_upgrade.png": {
+      "width": 16,
+      "height": 16,
+      "rgbaSha256": "e5bff53ae6d9fc1cd135eed83d695129b3701c861444f11ecc2c7d77bf79d0b6"
+    },
+    "textures/item/unfinished_ascension_scroll.png": {
+      "width": 16,
+      "height": 16,
+      "rgbaSha256": "e79217e899d3a7b627465122d557b2650dfd3df08e9f83b4a7190279811c2f65"
+    },
+    "textures/block/chamber_mithril.png": {
+      "width": 16,
+      "height": 16,
+      "rgbaSha256": "85220d813939238176cb97766f340a1386a4bcc83af1d7fc2b103833d54f01a9"
+    },
+    "textures/block/chamber_skins/brass_particle.png": {
+      "width": 16,
+      "height": 16,
+      "rgbaSha256": "47e77c98199249349fa71e3d3abb46b7f322e2596d83066867b1f4b0e1743eb6"
+    },
+    "textures/block/chamber_skins/mithril_particle.png": {
+      "width": 16,
+      "height": 16,
+      "rgbaSha256": "85220d813939238176cb97766f340a1386a4bcc83af1d7fc2b103833d54f01a9"
+    },
+    "textures/entity/arcane_blaze_super.png": {
+      "width": 64,
+      "height": 32,
+      "rgbaSha256": "f75a28ecb67f7d3956ff95efce7fab4a34fe640f8ca3496c52db117b76afde32"
+    },
+    "textures/entity/arcane_blaze.png": {
+      "width": 64,
+      "height": 32,
+      "rgbaSha256": "801d8f4622b8f9b4a1cdd3f90591db5ffe5c1dc92403e750c3dfba9de277186b"
+    },
+    "textures/entity/arcane_blaze_idle.png": {
+      "width": 64,
+      "height": 32,
+      "rgbaSha256": "22694777ace05c14fb96679725ce94f807a79516a33e0dc618ab0d564265cae5"
+    },
+    "textures/entity/arcane_blaze_active.png": {
+      "width": 64,
+      "height": 32,
+      "rgbaSha256": "801d8f4622b8f9b4a1cdd3f90591db5ffe5c1dc92403e750c3dfba9de277186b"
+    },
+    "textures/entity/chamber/arcane_blaze_super.png": {
+      "width": 64,
+      "height": 32,
+      "rgbaSha256": "3e4c1e85c576ce88ed85148d989387f5860450f3cd9b1f5533850f84a2a810cf"
+    },
+    "textures/entity/chamber/arcane_blaze_super_closed.png": {
+      "width": 64,
+      "height": 32,
+      "rgbaSha256": "ca702d35bbb71b270a21552a106895d9b8bf89e0aeff5bbe85b56df8329b1056"
+    },
+    "textures/entity/chamber/arcane_blaze_active_closed.png": {
+      "width": 64,
+      "height": 32,
+      "rgbaSha256": "432fb625428b7eedd43ad8e5ee15777a16a4fcf81f134739af19ef5c0bdf8718"
+    },
+    "textures/entity/chamber/arcane_blaze_active.png": {
+      "width": 64,
+      "height": 32,
+      "rgbaSha256": "801d8f4622b8f9b4a1cdd3f90591db5ffe5c1dc92403e750c3dfba9de277186b"
+    },
+    "textures/entity/chamber/blaze_inert_low_eyes.png": {
+      "width": 16,
+      "height": 16,
+      "rgbaSha256": "01303f2e5b46275394c00cb5217bd473809293ec35b019911fd4534a188942f7"
+    },
+    "textures/block/chamber_cage.png": {
+      "width": 32,
+      "height": 32,
+      "rgbaSha256": "5d21d4dea323c67835991123553edce80f04536b1261bc728e2f3a2ab12008a0"
+    },
+    "textures/block/chamber_skins/mithril_cage.png": {
+      "width": 32,
+      "height": 32,
+      "rgbaSha256": "e0125ac5a1b8e3db98096afb60d9e8c2ce022a47bb7e79df60e95fe7be4f2506"
+    },
+    "textures/block/chamber_base_top.png": {
+      "width": 16,
+      "height": 16,
+      "rgbaSha256": "4c092989128f2b45624e5b99e5d6928642259228ed402245f1700ed6c2b56e91"
+    },
+    "textures/block/chamber_skins/brass_base_top.png": {
+      "width": 16,
+      "height": 16,
+      "rgbaSha256": "fd305034d8aab8b7c1e3769f7da5e15dd264b456e235b5bbc140824515a28b31"
+    },
+    "textures/block/chamber_skins/mithril_base_top.png": {
+      "width": 16,
+      "height": 16,
+      "rgbaSha256": "36f4c991b0b4dfa9bf6765c4b0521bd77e1e1b2ec4e125c53b1136b46fbf417d"
+    },
+    "textures/entity/chamber/chamber_base_top.png": {
+      "width": 16,
+      "height": 16,
+      "rgbaSha256": "4c092989128f2b45624e5b99e5d6928642259228ed402245f1700ed6c2b56e91"
+    },
+    "textures/entity/chamber/chamber_cage.png": {
+      "width": 32,
+      "height": 32,
+      "rgbaSha256": "5d21d4dea323c67835991123553edce80f04536b1261bc728e2f3a2ab12008a0"
+    },
+    "textures/entity/chamber/chamber_rods_super.png": {
+      "width": 16,
+      "height": 16,
+      "rgbaSha256": "80f9eeec69e6b8ed796b7d73caebcb26ebb495f0067822b002b6140a9affa514"
+    },
+    "textures/block/chamber_base_wrap.png": {
+      "width": 32,
+      "height": 32,
+      "rgbaSha256": "c456991f96364a4d95bb7098b62a41b57e391ccaafb1a691b5a395fed504e049"
+    },
+    "textures/block/chamber_copper.png": {
+      "width": 16,
+      "height": 16,
+      "rgbaSha256": "13f438a8a06158e91f87288e1884fd8ff5629864156ae9c396f0603964f04210"
+    },
+    "textures/entity/chamber/chamber_base_wrap.png": {
+      "width": 32,
+      "height": 32,
+      "rgbaSha256": "c456991f96364a4d95bb7098b62a41b57e391ccaafb1a691b5a395fed504e049"
+    },
+    "textures/entity/arcane_brows_idle.png": {
+      "width": 64,
+      "height": 32,
+      "rgbaSha256": "4be80c6f4bf93363efad8dced12c8f5a25d7b16e152cb6fc4a824be4e25d949f"
+    },
+    "textures/entity/arcane_brows_super.png": {
+      "width": 64,
+      "height": 32,
+      "rgbaSha256": "8abef245d919477e2b16bb059f21a6b3d2da15a5ff996cdaf8d5d8ebbe3a389d"
+    },
+    "textures/entity/arcane_brows_active.png": {
+      "width": 64,
+      "height": 32,
+      "rgbaSha256": "7caf765fadbb4730f1edd2c48d852f28abe7094695443894fedc4e3db02aaede"
+    },
+    "textures/entity/chamber/arcane_brows_super.png": {
+      "width": 64,
+      "height": 32,
+      "rgbaSha256": "26f521d00475b68e909c31eb7e66be7c22c403f2170024a7b71c818f6ddf8f8c"
+    },
+    "textures/entity/chamber/arcane_brows_active.png": {
+      "width": 64,
+      "height": 32,
+      "rgbaSha256": "20d849b04b4a9850a27831e33e6af567b07468c76db717757e157ecf4af09073"
+    },
+    "textures/entity/chamber/brows.png": {
+      "width": 16,
+      "height": 16,
+      "rgbaSha256": "5a71d45a779ae65173fb1f88af8bf9cb527d4f12f3caa9a38290fa74bbc69061"
+    }
+  },
+  "metadata": {
+    "textures/block/arcane_essence_block.png.mcmeta": {
+      "animation": {
+        "interpolate": false,
+        "frametime": 3
+      }
+    },
+    "textures/block/arcane_solution_flow.png.mcmeta": {
+      "animation": {
+        "width": 32,
+        "height": 32,
+        "frametime": 1,
+        "interpolate": false
+      }
+    },
+    "textures/block/arcane_solution_still.png.mcmeta": {
+      "animation": {
+        "width": 16,
+        "height": 16,
+        "frametime": 2,
+        "interpolate": false
+      }
+    },
+    "textures/block/crimson_essence_block.png.mcmeta": {
+      "animation": {
+        "interpolate": false,
+        "frametime": 3
+      }
+    },
+    "textures/block/crimson_solution_flow.png.mcmeta": {
+      "animation": {
+        "width": 32,
+        "height": 32,
+        "frametime": 1,
+        "interpolate": false
+      }
+    },
+    "textures/block/crimson_solution_still.png.mcmeta": {
+      "animation": {
+        "width": 16,
+        "height": 16,
+        "frametime": 2,
+        "interpolate": false
+      }
+    },
+    "textures/block/ink/common_flow.png.mcmeta": {
+      "animation": {
+        "frametime": 3
+      }
+    },
+    "textures/block/ink/common_still.png.mcmeta": {
+      "animation": {
+        "frametime": 3
+      }
+    },
+    "textures/block/ink/epic_flow.png.mcmeta": {
+      "animation": {
+        "frametime": 3
+      }
+    },
+    "textures/block/ink/epic_still.png.mcmeta": {
+      "animation": {
+        "frametime": 3
+      }
+    },
+    "textures/block/ink/legendary_flow.png.mcmeta": {
+      "animation": {
+        "frametime": 3
+      }
+    },
+    "textures/block/ink/legendary_still.png.mcmeta": {
+      "animation": {
+        "frametime": 3
+      }
+    },
+    "textures/block/ink/rare_flow.png.mcmeta": {
+      "animation": {
+        "frametime": 3
+      }
+    },
+    "textures/block/ink/rare_still.png.mcmeta": {
+      "animation": {
+        "frametime": 3
+      }
+    },
+    "textures/block/ink/uncommon_flow.png.mcmeta": {
+      "animation": {
+        "frametime": 3
+      }
+    },
+    "textures/block/ink/uncommon_still.png.mcmeta": {
+      "animation": {
+        "frametime": 3
+      }
+    }
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "approvedPrototype": "0.1.0 / 2026-10-20",
+  "dependencies": {
+    "create": "6.0.8",
+    "irons_spellbooks": "1.20.1-3.16.3"
+  },
+  "validation": {
+    "jsonModelsComparedToOriginal": 6,
+    "inventoryQuadsComparedToOriginal": 98,
+    "maxAllowedNumericError": 1e-07,
+    "mismatches": 0
+  },
+  "resources": {
+    "models/block/ascension_chamber/runtime_decorations.json": "151c952b98452324ca116804b855d2755b1540f60d85fee608ca614cde99cdab",
+    "models/block/ascension_chamber/runtime_geometry.json": "32916f6f7c4221c02adbfb705c128ef999dde61467499d835590be6f5481fdbd",
+    "models/block/ascension_chamber/runtime_residual_fire.json": "43ce50679cbe97202406c66e2b911c59acf859a0b5bdac2fdd431ec95f7b8c0e",
+    "models/block/ascension_chamber/selected_item.mtl": "23b784d18436f9a28c8c5e3f980084a53220eddb16c99b7ecbd5f9da516a580b",
+    "models/block/ascension_chamber/selected_item.obj": "efc662e1cd4f76558ae0fc1491a483a62cb7aae699994ad2deff71b5b4a7bf6e",
+    "models/block/ascension_chamber_active.json": "146d59ba0df50a4dadf4354b197e1ef1f32bb873b3abd5ae769e5f9ab88a68a6",
+    "models/block/ascension_chamber_idle.json": "146d59ba0df50a4dadf4354b197e1ef1f32bb873b3abd5ae769e5f9ab88a68a6",
+    "models/block/ascension_chamber_super.json": "146d59ba0df50a4dadf4354b197e1ef1f32bb873b3abd5ae769e5f9ab88a68a6"
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    {
+      "item": "arcane_industry:crimson_solution_bottle"
+    },
+    {
+      "item": "arcane_industry:crimson_solution_bottle"
+    },
+    {
+      "item": "arcane_industry:crimson_solution_bottle"
+    },
+    {
+      "item": "arcane_industry:crimson_solution_bottle"
+    },
+    {
+      "item": "minecraft:bucket"
+    }
+  ],
+  "result": {
+    "item": "arcane_industry:crimson_solution_bucket"
+  }
+}

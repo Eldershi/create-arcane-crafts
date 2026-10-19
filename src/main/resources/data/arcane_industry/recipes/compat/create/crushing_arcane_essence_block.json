@@ -1,0 +1,15 @@
+{
+  "type": "create:crushing",
+  "ingredients": [
+    {
+      "item": "arcane_industry:arcane_essence_block"
+    }
+  ],
+  "processingTime": 200,
+  "results": [
+    {
+      "item": "irons_spellbooks:arcane_essence",
+      "count": 9
+    }
+  ]
+}

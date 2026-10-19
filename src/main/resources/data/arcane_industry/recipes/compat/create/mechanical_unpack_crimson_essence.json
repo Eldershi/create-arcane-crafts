@@ -1,0 +1,16 @@
+{
+  "type": "create:mechanical_crafting",
+  "acceptMirrored": false,
+  "pattern": [
+    "B"
+  ],
+  "key": {
+    "B": {
+      "item": "arcane_industry:crimson_essence_block"
+    }
+  },
+  "result": {
+    "item": "arcane_industry:crimson_essence",
+    "count": 9
+  }
+}

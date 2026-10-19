@@ -1,0 +1,28 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "DRD",
+    "AUA",
+    "DED"
+  ],
+  "key": {
+    "R": {
+      "item": "irons_spellbooks:blank_rune"
+    },
+    "D": {
+      "item": "create:andesite_alloy"
+    },
+    "A": {
+      "item": "minecraft:amethyst_shard"
+    },
+    "U": {
+      "item": "sophisticatedbackpacks:upgrade_base"
+    },
+    "E": {
+      "item": "irons_spellbooks:arcane_essence"
+    }
+  },
+  "result": {
+    "item": "arcane_industry:mana_supply_upgrade"
+  }
+}

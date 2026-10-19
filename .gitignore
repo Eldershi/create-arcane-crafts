@@ -1,25 +1,23 @@
-# Local build and development runtime
-/build/
+# Build and local development
 /.gradle/
+/.gradle-user/
+/build/
 /run/
 /instance/
 /testing/
 /art/
-/tools/
-/design/
 /work/
 /outputs/
-# Caches and generated files
 __pycache__/
 *.py[cod]
 *.class
 *.jar
+!gradle/wrapper/gradle-wrapper.jar
 *.log
 .DS_Store
 .idea/
 *.iml
 .vscode/
-# Private local configuration
 .env
 .env.*
 !.env.example

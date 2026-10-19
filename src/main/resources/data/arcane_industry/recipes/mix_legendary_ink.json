@@ -1,0 +1,18 @@
+{
+  "type": "create:mixing",
+  "ingredients": [
+    {
+      "fluid": "irons_spellbooks:epic_ink",
+      "amount": 1000
+    },
+    {
+      "tag": "forge:gems/amethyst"
+    }
+  ],
+  "results": [
+    {
+      "fluid": "irons_spellbooks:legendary_ink",
+      "amount": 250
+    }
+  ]
+}

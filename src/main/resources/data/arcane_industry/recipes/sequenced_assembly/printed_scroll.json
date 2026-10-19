@@ -1,0 +1,54 @@
+{
+  "type": "create:sequenced_assembly",
+  "ingredient": {
+    "item": "irons_spellbooks:scroll"
+  },
+  "transitionalItem": {
+    "item": "arcane_industry:uninked_scroll"
+  },
+  "sequence": [
+    {
+      "type": "arcane_industry:assembly_scroll_printing",
+      "ingredients": [
+        {
+          "item": "irons_spellbooks:scroll"
+        },
+        {
+          "item": "irons_spellbooks:scroll"
+        },
+        {
+          "fluid": "arcane_industry:arcane_solution",
+          "amount": 50
+        }
+      ],
+      "results": [
+        {
+          "item": "arcane_industry:uninked_scroll"
+        }
+      ]
+    },
+    {
+      "type": "arcane_industry:scroll_inking",
+      "ingredients": [
+        {
+          "item": "arcane_industry:uninked_scroll"
+        },
+        {
+          "fluidTag": "arcane_industry:printing_inks",
+          "amount": 250
+        }
+      ],
+      "results": [
+        {
+          "item": "irons_spellbooks:scroll"
+        }
+      ]
+    }
+  ],
+  "results": [
+    {
+      "item": "irons_spellbooks:scroll"
+    }
+  ],
+  "loops": 1
+}

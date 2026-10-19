@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    {
+      "item": "arcane_industry:arcane_solution_bottle"
+    }
+  ],
+  "result": {
+    "item": "irons_spellbooks:arcane_essence"
+  }
+}

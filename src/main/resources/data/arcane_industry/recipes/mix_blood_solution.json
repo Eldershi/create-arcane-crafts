@@ -1,0 +1,18 @@
+{
+  "type": "create:mixing",
+  "ingredients": [
+    {
+      "fluid": "irons_spellbooks:blood",
+      "amount": 250
+    },
+    {
+      "item": "irons_spellbooks:arcane_essence"
+    }
+  ],
+  "results": [
+    {
+      "fluid": "arcane_industry:crimson_solution",
+      "amount": 250
+    }
+  ]
+}

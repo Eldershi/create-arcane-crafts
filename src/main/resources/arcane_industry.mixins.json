@@ -1,0 +1,25 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "dev.expedition.arcane.mixin",
+  "compatibilityLevel": "JAVA_17",
+  "mixins": [
+    "ArcaneAnvilMenuMixin",
+    "ScrollForgeMenuMixin",
+    "ScrollInkingSpoutMixin",
+    "AscensionSpoutMixin",
+    "PrintedScrollAssemblyMixin",
+    "ScrollAscensionAssemblyMixin",
+    "PrintedInscriptionMenuMixin",
+    "PrintedInscriptionResultSlotMixin",
+    "MechanicalMixerAscensionMixin",
+    "AscensionBasinRecipeMixin",
+    "GrindstoneDrainAccessor"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "client": [
+    "client.NativeInkFluidTypeAccessor"
+  ]
+}

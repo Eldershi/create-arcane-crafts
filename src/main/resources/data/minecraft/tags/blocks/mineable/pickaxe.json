@@ -1,0 +1,10 @@
+{
+  "replace": false,
+  "values": [
+    "arcane_industry:arcane_grindstone",
+    "arcane_industry:arcane_grindstone_drain",
+    "arcane_industry:arcane_hatch",
+    "arcane_industry:arcane_essence_block",
+    "arcane_industry:crimson_essence_block"
+  ]
+}

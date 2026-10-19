@@ -1,0 +1,15 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": ["GAG", "CTC", "GCG"],
+  "key": {
+    "G": {"item": "create:golden_sheet"},
+    "A": {"item": "minecraft:amethyst_shard"},
+    "C": {"item": "create:copper_sheet"},
+    "T": {"item": "create_dragons_plus:blaze_upgrade_smithing_template"}
+  },
+  "result": {
+    "item": "arcane_industry:ascension_template",
+    "count": 1
+  }
+}

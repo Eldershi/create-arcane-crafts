@@ -1,0 +1,18 @@
+{
+  "type": "create:mixing",
+  "ingredients": [
+    {
+      "fluid": "irons_spellbooks:uncommon_ink",
+      "amount": 1000
+    },
+    {
+      "tag": "forge:ingots/iron"
+    }
+  ],
+  "results": [
+    {
+      "fluid": "irons_spellbooks:rare_ink",
+      "amount": 250
+    }
+  ]
+}

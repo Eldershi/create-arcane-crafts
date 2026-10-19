@@ -1,0 +1,28 @@
+{
+  "sources": [
+    {
+      "type": "minecraft:single",
+      "resource": "arcane_industry:entity/chamber/chamber_cage"
+    },
+    {
+      "type": "minecraft:single",
+      "resource": "arcane_industry:entity/chamber/chamber_base_top"
+    },
+    {
+      "type": "minecraft:single",
+      "resource": "arcane_industry:entity/chamber/arcane_blaze_active"
+    },
+    {
+      "type": "minecraft:single",
+      "resource": "arcane_industry:entity/chamber/arcane_brows_active"
+    },
+    {
+      "type": "minecraft:single",
+      "resource": "arcane_industry:entity/chamber/chamber_rods_active"
+    },
+    {
+      "type": "minecraft:single",
+      "resource": "arcane_industry:entity/chamber/chamber_base_wrap"
+    }
+  ]
+}

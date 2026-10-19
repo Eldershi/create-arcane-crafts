@@ -1,0 +1,17 @@
+{
+  "type": "create:filling",
+  "ingredients": [
+    {
+      "item": "minecraft:bucket"
+    },
+    {
+      "fluid": "arcane_industry:crimson_solution",
+      "amount": 1000
+    }
+  ],
+  "results": [
+    {
+      "item": "arcane_industry:crimson_solution_bucket"
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "conditions": [
+    {
+      "type": "forge:mod_loaded",
+      "modid": "kaleidoscope_cookery"
+    }
+  ],
+  "type": "kaleidoscope_cookery:millstone",
+  "ingredient": {
+    "item": "arcane_industry:arcane_essence_block"
+  },
+  "result": {
+    "item": "irons_spellbooks:arcane_essence",
+    "count": 9
+  }
+}

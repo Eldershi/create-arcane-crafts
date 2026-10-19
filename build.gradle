@@ -1,0 +1,159 @@
+import groovy.json.JsonOutput
+import groovy.json.JsonSlurper
+
+buildscript {
+    repositories {
+        maven { url = 'https://repo.spongepowered.org/repository/maven-public/' }
+        mavenCentral()
+    }
+    dependencies { classpath 'org.spongepowered:mixingradle:0.7.38' }
+}
+
+plugins {
+    id 'java'
+    id 'idea'
+    id 'net.minecraftforge.gradle' version '6.0.42'
+}
+apply plugin: 'org.spongepowered.mixin'
+
+group = mod_group_id
+version = mod_version
+base { archivesName = 'create-arcane-crafts' }
+java {
+    toolchain.languageVersion = JavaLanguageVersion.of(17)
+    withSourcesJar()
+}
+
+minecraft {
+    mappings channel: 'official', version: minecraft_version
+    copyIdeResources = true
+    runs {
+        configureEach {
+            workingDirectory project.file('run')
+            property 'forge.logging.console.level', 'info'
+            // Create publishes SRG refmaps; remap them for the named dev environment.
+            property 'mixin.env.remapRefMap', 'true'
+            property 'mixin.env.refMapRemappingFile', "${projectDir}/build/createSrgToMcp/output.srg"
+            mods {
+                arcane_industry { source sourceSets.main }
+            }
+        }
+        client {}
+        server { args '--nogui' }
+    }
+}
+
+mixin {
+    add sourceSets.main, 'arcane_industry.refmap.json'
+    config 'arcane_industry.mixins.json'
+}
+
+repositories {
+    mavenCentral()
+    maven { url = 'https://maven.createmod.net'; content {
+        includeGroup 'com.simibubi.create'
+        includeGroup 'net.createmod.ponder'
+        includeGroup 'dev.engine-room.flywheel'
+    } }
+    maven { url = 'https://maven.ithundxr.dev/mirror'; content {
+        includeGroup 'com.tterrag.registrate'
+    } }
+    maven {
+        url = 'https://maven.dragons.plus/releases'
+        content { includeGroupByRegex 'plus\\.dragons.*' }
+        // Use the published JARs without upstream development-only variant dependencies.
+        metadataSources { mavenPom(); artifact(); ignoreGradleMetadataRedirection() }
+    }
+    maven { url = 'https://api.modrinth.com/maven'; content { includeGroup 'maven.modrinth' } }
+    maven { url = 'https://maven.blamejared.com'; content { includeGroup 'mezz.jei' } }
+    maven { url = 'https://maven.theillusivec4.top'; content { includeGroup 'top.theillusivec4.curios' } }
+    maven { url = 'https://dl.cloudsmith.io/public/geckolib3/geckolib/maven/'; content {
+        includeGroup 'software.bernie.geckolib'
+    } }
+    maven { url = 'https://maven.kosmx.dev'; content { includeGroup 'dev.kosmx.player-anim' } }
+    maven { url = 'https://repo.spongepowered.org/repository/maven-public/'; content {
+        includeGroup 'org.spongepowered'
+    } }
+}
+
+dependencies {
+    minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
+    // 0.8.5's AP crashes on dependency field descriptors (TypeHandleASM).
+    // 0.8.7 fixes the build-time processor; Forge's runtime Mixin stays untouched.
+    annotationProcessor 'org.spongepowered:mixin:0.8.7:processor'
+
+    implementation(fg.deobf("com.simibubi.create:create-${minecraft_version}:${create_version}:slim")) { transitive = false }
+    implementation(fg.deobf("net.createmod.ponder:Ponder-Forge-${minecraft_version}:${ponder_version}")) { transitive = false }
+    compileOnly(fg.deobf("dev.engine-room.flywheel:flywheel-forge-api-${minecraft_version}:${flywheel_version}")) { transitive = false }
+    runtimeOnly(fg.deobf("dev.engine-room.flywheel:flywheel-forge-${minecraft_version}:${flywheel_version}")) { transitive = false }
+    implementation(fg.deobf("com.tterrag.registrate:Registrate:${registrate_version}")) { transitive = false }
+    implementation 'io.github.llamalad7:mixinextras-forge:0.4.1'
+
+    implementation(fg.deobf("plus.dragons.createenchantmentindustry:create-enchantment-industry-${minecraft_version}:${cei_version}")) { transitive = false }
+    implementation(fg.deobf("plus.dragons.createdragonsplus:create-dragons-plus-${minecraft_version}:${dragons_plus_version}")) { transitive = false }
+    implementation(fg.deobf("maven.modrinth:irons-spells-n-spellbooks:${irons_spellbooks_version_id}")) { transitive = false }
+    implementation(fg.deobf("maven.modrinth:irons-lib:${irons_lib_version_id}")) { transitive = false }
+    implementation(fg.deobf("maven.modrinth:sophisticated-backpacks:${sophisticated_backpacks_version_id}")) { transitive = false }
+    implementation(fg.deobf("maven.modrinth:sophisticated-core:${sophisticated_core_version_id}")) { transitive = false }
+    implementation(fg.deobf("top.theillusivec4.curios:curios-forge:${curios_version}")) { transitive = false }
+    implementation(fg.deobf("software.bernie.geckolib:geckolib-forge-${minecraft_version}:${geckolib_version}")) { transitive = false }
+    implementation(fg.deobf("dev.kosmx.player-anim:player-animation-lib-forge:${player_animator_version}")) { transitive = false }
+    compileOnly(fg.deobf("mezz.jei:jei-${minecraft_version}-common-api:${jei_version}")) { transitive = false }
+    compileOnly(fg.deobf("mezz.jei:jei-${minecraft_version}-forge-api:${jei_version}")) { transitive = false }
+    runtimeOnly(fg.deobf("mezz.jei:jei-${minecraft_version}-forge:${jei_version}")) { transitive = false }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+    options.release = 17
+}
+
+// Keep the source resource readable while connecting it to the AP-generated refmap.
+// This also works with the prototype resource, which predates an explicit refmap key.
+tasks.named('processResources', ProcessResources).configure {
+    inputs.property 'mixinRefmap', 'arcane_industry.refmap.json'
+    doLast {
+        File config = new File(destinationDir, 'arcane_industry.mixins.json')
+        def document = new JsonSlurper().parse(config)
+        document.refmap = 'arcane_industry.refmap.json'
+        config.setText(JsonOutput.prettyPrint(JsonOutput.toJson(document)) + '\n', 'UTF-8')
+    }
+}
+
+tasks.named('jar', Jar).configure {
+    manifest.attributes([
+            'Specification-Title': 'Create: Arcane Crafts',
+            'Specification-Vendor': 'Eldershi',
+            'Specification-Version': '1',
+            'Implementation-Title': project.name,
+            'Implementation-Version': project.version,
+            'Implementation-Vendor': 'Eldershi',
+            'MixinConfigs': 'arcane_industry.mixins.json'
+    ])
+    finalizedBy 'reobfJar'
+}
+
+tasks.register('verifyReleaseJar') {
+    group = 'verification'
+    description = 'Checks that the reobfuscated release contains the Mixin config and generated refmap.'
+    dependsOn 'reobfJar'
+    doLast {
+        File artifact = tasks.named('jar', Jar).get().archiveFile.get().asFile
+        new java.util.jar.JarFile(artifact).withCloseable { jar ->
+            if (jar.manifest.mainAttributes.getValue('MixinConfigs') != 'arcane_industry.mixins.json') {
+                throw new GradleException('Release JAR is missing its MixinConfigs manifest entry')
+            }
+            ['arcane_industry.mixins.json', 'arcane_industry.refmap.json'].each { entry ->
+                if (jar.getEntry(entry) == null) throw new GradleException("Release JAR is missing ${entry}")
+            }
+            // This class calls a vanilla override through the upstream menu.
+            // Its production invocation must use SRG after reobfJar.
+            def bridge = jar.getEntry('dev/expedition/arcane/compat/NativeAnvilBridge$SnapshotMenu.class')
+            if (bridge == null || !new String(jar.getInputStream(bridge).bytes,
+                    java.nio.charset.StandardCharsets.ISO_8859_1).contains('m_6640_')) {
+                throw new GradleException('Release bridge was not reobfuscated to the production createResult name')
+            }
+        }
+    }
+}
+tasks.named('check').configure { dependsOn 'verifyReleaseJar' }

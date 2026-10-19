@@ -1,0 +1,18 @@
+{
+  "type": "create:mixing",
+  "ingredients": [
+    {
+      "fluid": "irons_spellbooks:rare_ink",
+      "amount": 1000
+    },
+    {
+      "tag": "forge:ingots/gold"
+    }
+  ],
+  "results": [
+    {
+      "fluid": "irons_spellbooks:epic_ink",
+      "amount": 250
+    }
+  ]
+}

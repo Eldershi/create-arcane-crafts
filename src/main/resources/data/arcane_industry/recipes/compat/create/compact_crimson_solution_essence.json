@@ -1,0 +1,14 @@
+{
+  "type": "create:compacting",
+  "ingredients": [
+    {
+      "fluid": "arcane_industry:crimson_solution",
+      "amount": 250
+    }
+  ],
+  "results": [
+    {
+      "item": "arcane_industry:crimson_essence"
+    }
+  ]
+}

@@ -1,0 +1,79 @@
+{
+  "type": "create:sequenced_assembly",
+  "ingredient": {
+    "tag": "forge:eggs"
+  },
+  "transitionalItem": {
+    "item": "arcane_industry:ember_cake_base"
+  },
+  "sequence": [
+    {
+      "type": "create:deploying",
+      "ingredients": [
+        {
+          "item": "arcane_industry:ember_cake_base"
+        },
+        {
+          "item": "minecraft:sugar"
+        }
+      ],
+      "results": [
+        {
+          "item": "arcane_industry:ember_cake_base"
+        }
+      ]
+    },
+    {
+      "type": "create:deploying",
+      "ingredients": [
+        {
+          "item": "arcane_industry:ember_cake_base"
+        },
+        {
+          "item": "irons_spellbooks:cinder_essence"
+        }
+      ],
+      "results": [
+        {
+          "item": "arcane_industry:ember_cake_base"
+        }
+      ]
+    },
+    {
+      "type": "create:pressing",
+      "ingredients": [
+        {
+          "item": "arcane_industry:ember_cake_base"
+        }
+      ],
+      "results": [
+        {
+          "item": "arcane_industry:ember_cake_base"
+        }
+      ]
+    },
+    {
+      "type": "create:filling",
+      "ingredients": [
+        {
+          "item": "arcane_industry:ember_cake_base"
+        },
+        {
+          "fluid": "arcane_industry:crimson_solution",
+          "amount": 1000
+        }
+      ],
+      "results": [
+        {
+          "item": "arcane_industry:ember_cake_base"
+        }
+      ]
+    }
+  ],
+  "results": [
+    {
+      "item": "arcane_industry:ember_cake"
+    }
+  ],
+  "loops": 1
+}
