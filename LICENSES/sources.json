@@ -1,0 +1,115 @@
+{
+  "verified_on": "2026-10-20",
+  "files": [
+    {
+      "file": "Create-6.0.8-LICENSE.md",
+      "repository": "Creators-of-Create/Create",
+      "version_or_ref": "mc1.20.1-6.0.8",
+      "source_url": "https://github.com/Creators-of-Create/Create/blob/mc1.20.1-6.0.8/LICENSE.md",
+      "github_blob_sha": "09585293b6f48832f0d37e731e19847f9bd1edfe",
+      "sha256": "2382116a50f4779cd338bcb8d8ab50363f2f72805f0bf1d69d169dfc781f3724",
+      "bytes": 1411,
+      "retrieved_via": "GitHub connected fetch_file API"
+    },
+    {
+      "file": "Irons-Spells-n-Spellbooks-1.20.1-3.16.3-LICENSE.md",
+      "repository": "iron431/irons-spells-n-spellbooks",
+      "version_or_ref": "v1.20.1-3.16.3",
+      "source_url": "https://github.com/iron431/irons-spells-n-spellbooks/blob/v1.20.1-3.16.3/LICENSE.md",
+      "github_blob_sha": "15096846b294c5f468b6a29aa476b8498d80fed8",
+      "sha256": "ebe3f96dd7684dfa6d46b0c484fa128f75b4d02052b8799a91ffbd6153fdf15b",
+      "bytes": 1002,
+      "retrieved_via": "GitHub connected fetch_file API"
+    },
+    {
+      "file": "SophisticatedBackpacks-1.20.x-LICENSE.md",
+      "repository": "P3pp3rF1y/SophisticatedBackpacks",
+      "version_or_ref": "1.20.x",
+      "source_url": "https://github.com/P3pp3rF1y/SophisticatedBackpacks/blob/1.20.x/LICENSE.md",
+      "github_blob_sha": "6aa6ed9f72720c774157620e1c2102920b3e16a1",
+      "sha256": "45fa717328fed2916961bd13ec2d33d7495ff3e0068e5df76ed905c39b14b40b",
+      "bytes": 2326,
+      "retrieved_via": "GitHub connected fetch_file API"
+    },
+    {
+      "file": "SophisticatedCore-1.20.x-LICENSE.md",
+      "repository": "P3pp3rF1y/SophisticatedCore",
+      "version_or_ref": "1.20.x",
+      "source_url": "https://github.com/P3pp3rF1y/SophisticatedCore/blob/1.20.x/LICENSE.md",
+      "github_blob_sha": "6aa6ed9f72720c774157620e1c2102920b3e16a1",
+      "sha256": "45fa717328fed2916961bd13ec2d33d7495ff3e0068e5df76ed905c39b14b40b",
+      "bytes": 2326,
+      "retrieved_via": "GitHub connected fetch_file API"
+    },
+    {
+      "file": "MinecraftForge-1.20.x-LICENSE.txt",
+      "repository": "MinecraftForge/MinecraftForge",
+      "version_or_ref": "1.20.x",
+      "source_url": "https://github.com/MinecraftForge/MinecraftForge/blob/1.20.x/LICENSE.txt",
+      "github_blob_sha": "249debe26b9e28814822e704a958858c5121eb1e",
+      "sha256": "481c96d94d182382c4225d5b210f8c658c85350cf548f25c9f56c058804f1e57",
+      "bytes": 27732,
+      "retrieved_via": "GitHub connected fetch_file API"
+    },
+    {
+      "file": "Create-Enchantment-Industry-2.5.4b-LICENSE.txt",
+      "repository": "DragonsPlusMinecraft/CreateEnchantmentIndustry",
+      "version_or_ref": "2.5.4b; ee0c8f521255f51b94d893a2410329d28f1de525",
+      "source_url": "https://github.com/DragonsPlusMinecraft/CreateEnchantmentIndustry/blob/ee0c8f521255f51b94d893a2410329d28f1de525/LICENSE.txt",
+      "version_evidence_url": "https://github.com/DragonsPlusMinecraft/CreateEnchantmentIndustry/blob/ee0c8f521255f51b94d893a2410329d28f1de525/gradle.properties",
+      "jar": "create-enchantment-industry-2.5.4b.jar",
+      "jar_entry": "LICENSE.txt",
+      "sha256": "5eecce16e59e24ddd9d3712012517a033f2cd0459ace22b43d5659d4624abff0",
+      "bytes": 42802,
+      "retrieved_via": "Verbatim LICENSE.txt entry extracted from original dependency JAR"
+    },
+    {
+      "file": "Create-Enchantment-Industry-2.5.4b-LGPL-3.0.txt",
+      "repository": "DragonsPlusMinecraft/CreateEnchantmentIndustry",
+      "version_or_ref": "2.5.4b; ee0c8f521255f51b94d893a2410329d28f1de525",
+      "source_url": "https://github.com/DragonsPlusMinecraft/CreateEnchantmentIndustry/blob/ee0c8f521255f51b94d893a2410329d28f1de525/LICENSE.txt",
+      "version_evidence_url": "https://github.com/DragonsPlusMinecraft/CreateEnchantmentIndustry/blob/ee0c8f521255f51b94d893a2410329d28f1de525/gradle.properties",
+      "jar": "create-enchantment-industry-2.5.4b.jar",
+      "jar_entry": "LICENSE.txt",
+      "sha256": "e62026b99063d55a0a04e92770377d0915824189d34674318e078f41ebed1e95",
+      "bytes": 7673,
+      "retrieved_via": "LGPL portion split from the verbatim combined LICENSE.txt"
+    },
+    {
+      "file": "Create-Enchantment-Industry-2.5.4b-GPL-3.0.txt",
+      "repository": "DragonsPlusMinecraft/CreateEnchantmentIndustry",
+      "version_or_ref": "2.5.4b; ee0c8f521255f51b94d893a2410329d28f1de525",
+      "source_url": "https://github.com/DragonsPlusMinecraft/CreateEnchantmentIndustry/blob/ee0c8f521255f51b94d893a2410329d28f1de525/LICENSE.txt",
+      "version_evidence_url": "https://github.com/DragonsPlusMinecraft/CreateEnchantmentIndustry/blob/ee0c8f521255f51b94d893a2410329d28f1de525/gradle.properties",
+      "jar": "create-enchantment-industry-2.5.4b.jar",
+      "jar_entry": "LICENSE.txt",
+      "sha256": "605e9047a563c5c8396ffb18232aa4304ec56586aee537c45064c6fb425e44ad",
+      "bytes": 35129,
+      "retrieved_via": "GPL portion split from the verbatim combined LICENSE.txt"
+    }
+  ],
+  "notes": [
+    "Create's tagged license covers code under MIT and src/main/resources/assets/ under All Rights Reserved.",
+    "Iron's exact release tag permits addons using the mod as a dependency but does not permit asset reuse or public distribution of modified upstream code.",
+    "Sophisticated licenses are read from the current official 1.20.x branches; the local Backpacks 3.26.9.2194 and Core 1.5.6.2383 JARs declare All Rights Reserved. These branch license texts must not be represented as release-tag snapshots.",
+    "MinecraftForge license is the complete official 1.20.x branch LICENSE.txt, including upstream notices and LGPL 2.1. It is not an exact snapshot of the locally installed Forge build.",
+    "License texts are preserved as retrieved or extracted. Splitting the CEI combined license is for convenience; retain the combined original as the authoritative copy."
+  ],
+  "minecraft_official_policy_sources": [
+    {
+      "title": "Minecraft EULA",
+      "url": "https://www.minecraft.net/en-us/eula",
+      "relevant_sections": [
+        "USING mods"
+      ]
+    },
+    {
+      "title": "Minecraft Usage Guidelines",
+      "url": "https://www.minecraft.net/en-us/usage-guidelines",
+      "relevant_sections": [
+        "Essential guidelines",
+        "Extended functionality and modifications"
+      ]
+    }
+  ]
+}

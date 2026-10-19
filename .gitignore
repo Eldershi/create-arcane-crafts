@@ -1,0 +1,25 @@
+# Local build and development runtime
+/build/
+/.gradle/
+/run/
+/instance/
+/testing/
+/art/
+/tools/
+/design/
+/work/
+/outputs/
+# Caches and generated files
+__pycache__/
+*.py[cod]
+*.class
+*.jar
+*.log
+.DS_Store
+.idea/
+*.iml
+.vscode/
+# Private local configuration
+.env
+.env.*
+!.env.example
