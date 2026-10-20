@@ -49,11 +49,10 @@ final class RandomResearchCategory implements IRecipeCategory<RandomResearchCate
     }
     @Override public void setRecipe(IRecipeLayoutBuilder builder, View view, IFocusGroup focus) {
         JeiDrawing.item(builder, RecipeIngredientRole.INPUT, 6, 24, new ItemStack(ItemRegistry.SCROLL.get()));
-        builder.addSlot(RecipeIngredientRole.CATALYST, 35, 24).setStandardSlotBackground()
+        builder.addSlot(RecipeIngredientRole.INPUT, 35, 24).setStandardSlotBackground()
                 .addIngredients(Ingredient.of(view.pool().school().getFocus()))
-                .addTooltipCallback((slot, tooltip) -> tooltip.add(Component.literal("学派引导物保留，不消耗。")));
+                .addTooltipCallback((slot, tooltip) -> tooltip.add(Component.literal("每次研习消耗一个学派引导物。")));
         JeiDrawing.fluid(builder, 65, 24, view.crimson() ? CrimsonContent.SOURCE.get() : ArcaneContent.SOURCE.get(), 2000);
-        JeiDrawing.item(builder, RecipeIngredientRole.CATALYST, 105, 24, new ItemStack(ArcaneContent.TEMPLATE.get()));
         if (view.headwear()) builder.addSlot(RecipeIngredientRole.CATALYST, 135, 24).setStandardSlotBackground()
                 .addItemStacks(List.of(JeiDrawing.registeredItem("create:goggles"),
                         JeiDrawing.registeredItem("irons_spellbooks:tarnished_helmet")))
@@ -76,7 +75,7 @@ final class RandomResearchCategory implements IRecipeCategory<RandomResearchCate
                     + String.format(Locale.ROOT, "%s%%", weights[tier] / 100.0) + " · "
                     + view.pool().tiers().get(tier).size() + "种" + fallback, 7, 53 + tier * 12);
         }
-        JeiDrawing.wrap(graphics, "1张空白卷轴＋500 mB原液；模板与引导物保留。70刻。开始锁定结果，缺档只向下回落。", 5, 118, 230);
+        JeiDrawing.wrap(graphics, "消耗1张空白卷轴、1个引导物与500 mB原液。161刻。开始锁定结果，缺档只向下回落。", 5, 118, 230);
         JeiDrawing.wrap(graphics, "普通档为空则不开工。法术池实时遵守启用、允许制作、无需研习；邪术排除。", 5, 146, 230);
     }
 }

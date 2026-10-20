@@ -89,11 +89,11 @@ public final class ChamberTests {
             require(chamber.inventory.getStackInSlot(AscensionChamberBlockEntity.INK_SLOT).isEmpty(), "bottled_ink_consumed");
             require(chamber.inventory.getStackInSlot(AscensionChamberBlockEntity.BOTTLE_SLOT).is(Items.GLASS_BOTTLE)
                     && chamber.inventory.getStackInSlot(AscensionChamberBlockEntity.BOTTLE_SLOT).getCount() == 1, "empty_bottle_returned");
-            require(chamber.hasTemplate(), "template_retained");
+            require(!chamber.hasTemplate(), "crafted_chamber_operates_without_installed_template");
             require("preserve me".equals(produced.getOrCreateTag().getString("arcane_industry_test_marker")), "scroll_other_nbt_retained");
             require(ISpellContainer.get(produced).getActiveSpells().get(0).isLocked(), "scroll_lock_retained");
             results.put("ordinary_4_to_5_and_70_tick_manual_cycle", "PASS");
-            results.put("bottle_template_and_nbt_preserved", "PASS");
+            results.put("bottle_and_nbt_preserved_without_runtime_template", "PASS");
 
             chamber.inventory.setStackInSlot(7, new ItemStack(CrimsonContent.EMBER_CAKE.get(), 2));
             CompoundTag saved = chamber.saveWithFullMetadata();
@@ -104,7 +104,7 @@ public final class ChamberTests {
             level.setBlockEntity(restored);
             require(restored.sourceTank.getFluidAmount() == 750
                     && restored.inventory.getStackInSlot(7).getCount() == 2 && restored.getFuelTicks() == savedFuel
-                    && restored.hasTemplate() && scrollLevel(restored.inventory.getStackInSlot(3)) == 5
+                    && !restored.hasTemplate() && scrollLevel(restored.inventory.getStackInSlot(3)) == 5
                     && restored.inventory.getStackInSlot(4).is(Items.GLASS_BOTTLE), "nbt_reload_retains_real_state");
             results.put("save_load_roundtrip", "PASS");
 
@@ -149,10 +149,11 @@ public final class ChamberTests {
             results.put("blocked_output_without_material_loss", "PASS");
 
             chamber = fresh(level, pos, 4, false, 1000);
-            chamber.inventory.setStackInSlot(0, ItemStack.EMPTY);
-            require(!chamber.processOneCycle(), "missing_template_refused");
-            unchangedInputs(chamber, 4, 1000, "missing_template");
-            results.put("template_required", "PASS");
+            require(chamber.inventory.getStackInSlot(0).isEmpty() && chamber.processOneCycle(),
+                    "template_is_a_crafting_part_not_a_runtime_key");
+            require(scrollLevel(chamber.inventory.getStackInSlot(3)) == 5
+                    && chamber.sourceTank.getFluidAmount() == 750, "template_free_work_pays_real_materials");
+            results.put("crafted_chamber_needs_no_runtime_template", "PASS");
 
             chamber = fresh(level, pos, 4, false, 0);
             CompoundTag noFuel = chamber.saveWithFullMetadata();
@@ -196,6 +197,8 @@ public final class ChamberTests {
             runTieredPrintingInkChecks(level, results);
             runCosmeticAndLightningTests(level, pos.offset(512, 0, 0), results);
             runResidualFireTests(level, pos.offset(1024, 0, 0), results);
+            results.put("interaction_rules", ChamberInteractionRulesTests.run(level, pos.offset(1536, 0, 0)));
+            results.put("display_hit_rules", ChamberDisplayHitTests.run(level, pos.offset(1600, 0, 0)));
             results.put("status", "PASS");
             return results;
         } catch (RuntimeException failure) {
@@ -404,7 +407,6 @@ public final class ChamberTests {
         for (int i = 0; i < 300; i++) chamber.tickServer();
         require(chamber.inventory.getSlots() == 8 && chamber.getNormalFuelTicks() == 1234 && chamber.getSuperFuelTicks() == 5678
                 && chamber.inventory.getStackInSlot(6).getCount() == 3, "legacy_energy_is_preserved_and_does_not_idle_burn");
-        chamber.inventory.setStackInSlot(0, new ItemStack(ArcaneContent.TEMPLATE.get()));
         chamber.inventory.setStackInSlot(1, scroll(7));
         chamber.inventory.setStackInSlot(2, new ItemStack(InkItem.getInkForRarity(SpellRegistry.FIREBOLT_SPELL.get().getRarity(8))));
         require(chamber.processOneCycle() && chamber.getSuperFuelTicks() == 4418 && chamber.getNormalFuelTicks() == 1234
@@ -724,7 +726,6 @@ public final class ChamberTests {
         legacy.putInt("SuperFuel", 1260);
         chamber.load(legacy);
         require(chamber.isTranscendent(), "legacy_red_63mb_selects_super_below_old_250mb_threshold");
-        chamber.inventory.setStackInSlot(0, new ItemStack(ArcaneContent.TEMPLATE.get()));
         chamber.inventory.setStackInSlot(1, scroll(7));
         chamber.inventory.setStackInSlot(2, new ItemStack(InkItem.getInkForRarity(correct)));
         require(chamber.processOneCycle() && chamber.getSuperFuelTicks() == 0
@@ -917,10 +918,20 @@ public final class ChamberTests {
                 "ascension_intermediate_native_progress_and_source_survive_item_nbt_reload");
 
         AscensionChamberBlockEntity chamber = fresh(level, pos, 4, false, 1000);
-        chamber.inventory.setStackInSlot(1, reloadedStage.copy());
+        chamber.inventory.setStackInSlot(1, ItemStack.EMPTY);
         chamber.inventory.setStackInSlot(2, ItemStack.EMPTY);
-        chamber.inventory.setStackInSlot(4, new ItemStack(Items.COBBLESTONE, 64));
         require(chamber.inventory.isItemValid(1, prepared), "manual_scroll_slot_accepts_valid_native_intermediate");
+        CompoundTag beforePreparedInsert = chamber.inventory.serializeNBT().copy();
+        require(chamber.getAutomationInventory().insertItem(1, reloadedStage.copy(), true).isEmpty()
+                        && chamber.inventory.serializeNBT().equals(beforePreparedInsert),
+                "valid_pre_inked_automation_simulation_accepts_without_mutating_inventory");
+        require(chamber.getAutomationInventory().insertItem(1, reloadedStage.copy(), false).isEmpty()
+                        && ItemStack.matches(chamber.inventory.getStackInSlot(1), reloadedStage),
+                "valid_pre_inked_automation_execution_preserves_complete_paid_stage");
+        chamber.inventory.setStackInSlot(4, new ItemStack(Items.COBBLESTONE, 64));
+        require(!chamber.inventory.isItemValid(1, prepared)
+                        && !chamber.getAutomationInventory().insertItem(1, prepared.copy(), true).isEmpty(),
+                "unclaimed_secondary_output_blocks_new_inputs_without_invalidating_an_existing_paid_stage");
         for (int tick = 0; tick < 79; tick++) chamber.tickServer();
         require(chamber.getProgress() == 79 && chamber.inventory.getStackInSlot(3).isEmpty()
                         && chamber.sourceTank.getFluidAmount() == 1000,
@@ -1037,6 +1048,11 @@ public final class ChamberTests {
             chamber = fresh(level, pos, 4, false, 1000);
             require(!UnfinishedAscensionScrollItem.isPreparedStage(invalid) && !chamber.inventory.isItemValid(1, invalid),
                     "invalid_native_ascension_payload_rejected_on_insertion_" + corruption);
+            CompoundTag beforeInvalidInsert = chamber.inventory.serializeNBT().copy();
+            require(ItemStack.matches(chamber.getAutomationInventory().insertItem(1, invalid.copy(), true), invalid)
+                            && ItemStack.matches(chamber.getAutomationInventory().insertItem(1, invalid.copy(), false), invalid)
+                            && chamber.inventory.serializeNBT().equals(beforeInvalidInsert),
+                    "invalid_native_ascension_payload_simulate_and_execute_reject_without_loss_" + corruption);
             chamber.inventory.setStackInSlot(1, invalid.copy());
             chamber.inventory.setStackInSlot(2, ItemStack.EMPTY);
             require(!chamber.processOneCycle() && ItemStack.isSameItemSameTags(invalid, chamber.inventory.getStackInSlot(1))
@@ -1095,6 +1111,9 @@ public final class ChamberTests {
         boolean fireTick = level.getGameRules().getBoolean(GameRules.RULE_DOFIRETICK);
         try {
             AscensionChamberBlockEntity chamber = fresh(level, pos, 4, false, 1000);
+            actor.setPos(pos.getX() + .5, pos.getY() + 1, pos.getZ() + 2);
+            // Explicit legacy-only payload: new chambers neither accept nor need this old slot.
+            chamber.inventory.setStackInSlot(0, new ItemStack(ArcaneContent.TEMPLATE.get()));
             for (int tick = 0; tick < 40; tick++) chamber.tickServer();
             CompoundTag inputs = chamber.inventory.serializeNBT().copy();
             int progress = chamber.getProgress();
@@ -1153,7 +1172,7 @@ public final class ChamberTests {
             require(chamber.isManualProcessing() && chamber.inventory.serializeNBT().equals(processingInputs)
                             && chamber.hasGoggles() && matchingCount(actor, gogglesTag) == 0,
                     "empty_hand_cannot_extract_inputs_or_headpiece_during_manual_processing");
-            // End the in-flight fixture by replacing its primary before testing idle extraction priority.
+            // End the in-flight fixture before testing independent display extraction.
             ItemStack pendingPrimary = chamber.inventory.getStackInSlot(AscensionChamberBlockEntity.SCROLL_SLOT).copy();
             chamber.inventory.setStackInSlot(AscensionChamberBlockEntity.SCROLL_SLOT, ItemStack.EMPTY);
             chamber.inventory.setStackInSlot(AscensionChamberBlockEntity.SCROLL_SLOT, pendingPrimary);
@@ -1164,11 +1183,13 @@ public final class ChamberTests {
                 ItemStack expected = chamber.inventory.getStackInSlot(slot).copy();
                 require(!expected.isEmpty(), "extraction_priority_fixture_slot_" + slot);
                 actor.getInventory().clearContent();
-                clickChamber(level, pos, actor, ItemStack.EMPTY, false);
+                require(chamber.takeDisplayedManualItem(actor,
+                        slot == AscensionChamberBlockEntity.RESULT_SLOT || slot == AscensionChamberBlockEntity.SCROLL_SLOT ? 0 : 1),
+                        "clicked_display_takes_fixture_slot_" + slot);
                 require(chamber.inventory.getStackInSlot(slot).isEmpty() && chamber.hasGoggles()
                                 && matchingCount(actor, expected.copyWithCount(1).save(new CompoundTag())) == expected.getCount()
                                 && matchingCount(actor, gogglesTag) == 0,
-                        "plain_empty_hand_takes_machine_slot_" + slot + "_before_original_headpiece");
+                        "clicked_display_takes_only_machine_slot_" + slot + "_before_original_headpiece");
             }
             CompoundTag beforeTake = chamber.inventory.serializeNBT().copy();
             actor.getInventory().clearContent();
@@ -1232,7 +1253,7 @@ public final class ChamberTests {
                     "second_legacy_empty_hand_click_returns_pending_crown_after_reload_without_touching_inputs");
             actor.getInventory().clearContent();
             chamber.inventory.setStackInSlot(AscensionChamberBlockEntity.SCROLL_SLOT, scroll(4));
-            clickChamber(level, pos, actor, ItemStack.EMPTY, false);
+            require(chamber.takeDisplayedManualItem(actor, 0), "clicked_primary_without_headpiece_is_accessible");
             require(chamber.inventory.getStackInSlot(AscensionChamberBlockEntity.SCROLL_SLOT).isEmpty()
                             && actor.getInventory().items.stream().anyMatch(stack -> scrollLevel(stack) == 4),
                     "empty_hand_without_headpiece_preserves_original_machine_extraction_behavior");
@@ -1573,7 +1594,6 @@ public final class ChamberTests {
         level.setBlock(pos, ArcaneContent.CHAMBER.get().defaultBlockState(), 3);
         require(level.getBlockEntity(pos) instanceof AscensionChamberBlockEntity, "chamber_placed");
         AscensionChamberBlockEntity chamber = (AscensionChamberBlockEntity) level.getBlockEntity(pos);
-        chamber.inventory.setStackInSlot(0, new ItemStack(ArcaneContent.TEMPLATE.get()));
         chamber.inventory.setStackInSlot(1, scroll(inputLevel));
         SpellRarity rarity = inputLevel >= 10 ? SpellRarity.LEGENDARY : SpellRegistry.FIREBOLT_SPELL.get().getRarity(inputLevel + 1);
         chamber.inventory.setStackInSlot(2, new ItemStack(InkItem.getInkForRarity(rarity)));

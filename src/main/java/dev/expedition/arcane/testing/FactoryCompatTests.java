@@ -384,13 +384,17 @@ public final class FactoryCompatTests {
                     "inscription_recycle_native_cauldron_tile");
             AlchemistCauldronTile cauldron = (AlchemistCauldronTile) level.getBlockEntity(pos);
             cauldron.fluidInventory.fill(new FluidStack(Fluids.WATER, 250), IFluidHandler.FluidAction.EXECUTE);
-            CompoundTag recoveredBefore = recovered.save(new CompoundTag());
-            require(!cauldron.isValidInput(recovered), "book_recovered_printed_scroll_rejected_by_cauldron_input");
+            require(recovered.getCount() == 1 && cauldron.isValidInput(recovered),
+                    "book_recovered_printed_scroll_preserves_native_recycling_eligibility");
+            var printedInk = AlchemistCauldronTile.getInkFromScroll(recovered).fluid().get();
             cauldron.tryMeltInput(recovered);
-            require(recovered.save(new CompoundTag()).equals(recoveredBefore)
-                            && cauldron.fluidInventory.drain(new FluidStack(Fluids.WATER, 250),
-                            IFluidHandler.FluidAction.SIMULATE).getAmount() == 250,
-                    "book_recovered_printed_scroll_cannot_recycle_into_higher_tier_ink");
+            FluidStack printedRecycle = cauldron.fluidInventory.drain(250, IFluidHandler.FluidAction.SIMULATE);
+            require(recovered.isEmpty() && printedRecycle.getAmount() == 250
+                            && (printedRecycle.getFluid().isSame(Fluids.WATER)
+                            || printedRecycle.getFluid().isSame(printedInk)),
+                    "book_recovered_printed_scroll_uses_native_random_recycle_transaction");
+            cauldron.fluidInventory.drain(4000, IFluidHandler.FluidAction.EXECUTE);
+            cauldron.fluidInventory.fill(new FluidStack(Fluids.WATER, 250), IFluidHandler.FluidAction.EXECUTE);
 
             menu.getScrollSlot().set(scroll(1));
             menu.doInscription(0);
@@ -427,7 +431,7 @@ public final class FactoryCompatTests {
             menu.getResultSlot().set(ItemStack.EMPTY);
         }
         results.put("native_inscription_printed_provenance_preview_failure_and_real_take", "PASS");
-        results.put("native_inscription_roundtrip_blocks_printed_recycling_but_preserves_wild_scrolls", "PASS");
+        results.put("native_inscription_roundtrip_preserves_printed_and_wild_native_recycling", "PASS");
     }
 
     private static ItemStack scroll(int level) {

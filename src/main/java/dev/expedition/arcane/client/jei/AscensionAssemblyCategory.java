@@ -47,13 +47,18 @@ final class AscensionAssemblyCategory implements IRecipeCategory<SequencedAssemb
         NativeAssemblyDisplays.ascensionView(recipe).ifPresent(display -> {
             var upgrade = display.upgrade();
             JeiDrawing.item(builder, RecipeIngredientRole.INPUT, 8, 23, upgrade.input());
+            ItemStack prepared = dev.expedition.arcane.item.UnfinishedAscensionScrollItem.create(upgrade.input());
+            if (!prepared.isEmpty()) {
+                builder.addInvisibleIngredients(RecipeIngredientRole.INPUT).addItemStack(prepared.copy());
+                builder.addInvisibleIngredients(RecipeIngredientRole.OUTPUT).addItemStack(prepared.copy());
+            }
             JeiDrawing.fluid(builder, 32, 23, upgrade.inkFluid(), ScrollUpgradeRules.INK_AMOUNT * 4L)
                     .addTooltipCallback((slot, tooltip) -> tooltip.add(Component.literal("与卷轴一同加入工作盆。")));
             JeiDrawing.item(builder, RecipeIngredientRole.OUTPUT, 181, 23, upgrade.output())
                     .setOutputSlotBackground();
             JeiDrawing.item(builder, RecipeIngredientRole.CATALYST, 8, 141,
-                            new ItemStack(ArcaneContent.TEMPLATE.get()))
-                    .addTooltipCallback((slot, tooltip) -> tooltip.add(Component.literal("安装于升华室，保留并重复使用。")));
+                            new ItemStack(ArcaneContent.CHAMBER.get()))
+                    .addTooltipCallback((slot, tooltip) -> tooltip.add(Component.literal("下方安装升华室；模板仅用于锻造升华室。")));
             JeiDrawing.fluid(builder, 56, 141,
                             display.crimson() ? CrimsonContent.SOURCE.get() : ArcaneContent.SOURCE.get(),
                             upgrade.solutionCostQuarterMb())
@@ -86,7 +91,7 @@ final class AscensionAssemblyCategory implements IRecipeCategory<SequencedAssemb
             JeiDrawing.text(graphics, "动力搅拌器", 6, 68);
             JeiDrawing.text(graphics, "工作盆", 6, 88);
             JeiDrawing.text(graphics, "下方升华室", 6, 108);
-            JeiDrawing.text(graphics, "模板保留", 5, 164);
+            JeiDrawing.text(graphics, "升华室", 5, 164);
             JeiDrawing.text(graphics, ArcaneRecipeDisplays.millibuckets(upgrade.solutionCostQuarterMb()) + " mB", 53, 164);
             if (upgrade.requiresCake()) {
                 JeiDrawing.text(graphics, "余烬蛋糕", 101, 164);

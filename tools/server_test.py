@@ -8,6 +8,8 @@ ROOT = HERE.parents[1]
 SERVER = HERE / 'testing/server'
 SOURCE = ROOT / 'clients/cmi-expedition/evidence/gameplay-batch-20261019/test-server'
 JAVA = ROOT / 'clients/cmi-expedition/runtime/temurin17/jdk-17.0.20.1+1-jre/Contents/Home/bin/java'
+# Optional graphics/search add-ons belong only in the isolated native client.
+CLIENT_ONLY = ('jecharacters-', 'JadeAddons-', 'oculus-', 'embeddium-', 'colorwheel-', 'colorwheel_patcher-', 'arcane-reveal-qa-')
 
 def prepare():
     SERVER.mkdir(parents=True, exist_ok=True)
@@ -15,7 +17,7 @@ def prepare():
     if not libraries.exists(): libraries.symlink_to(SOURCE / 'libraries', target_is_directory=True)
     shutil.copy2(SOURCE / 'eula.txt', SERVER / 'eula.txt')
     mods=SERVER/'mods';mods.mkdir(exist_ok=True)
-    desired={p.name:p for p in (HERE/'instance/mods').glob('*.jar')}
+    desired={p.name:p for p in (HERE/'instance/mods').glob('*.jar') if not p.name.startswith(CLIENT_ONLY)}
     for old in mods.glob('*.jar'):
         if old.name not in desired:old.unlink()
     for name,p in desired.items():shutil.copy2(p,mods/name)

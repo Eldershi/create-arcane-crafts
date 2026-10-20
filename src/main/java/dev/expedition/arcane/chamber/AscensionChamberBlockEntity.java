@@ -28,6 +28,7 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.ItemUtils;
 import net.minecraft.world.item.Items;
@@ -37,6 +38,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.BaseFireBlock;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.ForgeCapabilities;
 import net.minecraftforge.common.util.LazyOptional;
@@ -72,6 +74,8 @@ public class AscensionChamberBlockEntity extends BlockEntity implements IHaveGog
     /** The approved reveal lasts 8.014s, rounded up to an authoritative 20 TPS endpoint. */
     public static final int RESEARCH_PROCESSING_TIME = 161;
     private static final int MANUAL_BOOK_CLOSE_TICKS = 11;
+    /** Complete the existing 1.2 second result settle before a retained book can open again. */
+    public static final int BOOK_REARM_TICKS = 24;
     public static final int BASE_SOLUTION_COST = 250;
     public static final int SOLUTION_CAPACITY = 4000;
     /** Matches Create Enchantment Industry's native BlazeLightningHelper. */
@@ -84,12 +88,14 @@ public class AscensionChamberBlockEntity extends BlockEntity implements IHaveGog
         @Override public boolean isItemValid(int slot, ItemStack stack) {
             if (stack.isEmpty()) return false;
             return switch (slot) {
-                case TEMPLATE_SLOT -> stack.is(ArcaneContent.TEMPLATE.get());
-                case SCROLL_SLOT -> !manualProcessing && !manualResultReady
-                        && (ManualUpgradeRecipes.isPrimary(stack) || RandomResearchRules.isBlankScroll(stack)
-                        || UnfinishedAscensionScrollItem.isPreparedStage(stack));
-                case INK_SLOT -> !manualProcessing && !manualResultReady
-                        && (ManualUpgradeRecipes.isModifier(stack) || RandomResearchRules.isResearchFocus(stack));
+                // Slot zero is a recoverable legacy slot, never a runtime ingredient.
+                case TEMPLATE_SLOT -> false;
+                case SCROLL_SLOT -> canAcceptManualInputs()
+                        && ChamberInputRules.isPrimary(stack)
+                        && ChamberInputRules.canPair(level, stack, getStackInSlot(INK_SLOT));
+                case INK_SLOT -> canAcceptManualInputs()
+                        && ChamberInputRules.isSecondary(stack)
+                        && ChamberInputRules.canPair(level, getStackInSlot(SCROLL_SLOT), stack);
                 case NORMAL_FUEL_SLOT -> isArcaneEssence(stack) && canAcceptEssence();
                 // Slot 6 remains readable for old saves; cinder essence is no longer a fuel input.
                 case CAKE_SLOT -> stack.is(CrimsonContent.EMBER_CAKE.get());
@@ -97,7 +103,7 @@ public class AscensionChamberBlockEntity extends BlockEntity implements IHaveGog
             };
         }
         @Override public int getSlotLimit(int slot) {
-            return slot == TEMPLATE_SLOT || slot == SCROLL_SLOT ? 1 : 64;
+            return slot == TEMPLATE_SLOT || slot == SCROLL_SLOT || slot == INK_SLOT ? 1 : 64;
         }
         @Override protected void onContentsChanged(int slot) { inventoryContentsChanged(slot); }
     };
@@ -134,6 +140,12 @@ public class AscensionChamberBlockEntity extends BlockEntity implements IHaveGog
         @Override public int getSlots() { return inventory.getSlots(); }
         @Override public ItemStack getStackInSlot(int slot) { return inventory.getStackInSlot(slot); }
         @Override public ItemStack insertItem(int slot, ItemStack stack, boolean simulate) {
+            if ((slot == SCROLL_SLOT || slot == INK_SLOT) && canReassignPrimary(stack)) {
+                ItemStack remainder = stack.copy();
+                remainder.shrink(1);
+                if (!simulate) reassignPrimary(stack);
+                return remainder;
+            }
             return slot == RESULT_SLOT || slot == BOTTLE_SLOT ? stack : inventory.insertItem(slot, stack, simulate);
         }
         @Override public ItemStack extractItem(int slot, int amount, boolean simulate) {
@@ -141,11 +153,14 @@ public class AscensionChamberBlockEntity extends BlockEntity implements IHaveGog
             if (slot == INK_SLOT && !manualResultReady && RandomResearchRules.isResearchFocus(inventory.getStackInSlot(slot))) {
                 return inventory.extractItem(slot, amount, simulate);
             }
-            return slot == RESULT_SLOT || slot == BOTTLE_SLOT || slot == SUPER_FUEL_SLOT
+            return slot == RESULT_SLOT || slot == BOTTLE_SLOT || slot == SUPER_FUEL_SLOT || slot == TEMPLATE_SLOT
                     ? inventory.extractItem(slot, amount, simulate) : ItemStack.EMPTY;
         }
         @Override public int getSlotLimit(int slot) { return inventory.getSlotLimit(slot); }
-        @Override public boolean isItemValid(int slot, ItemStack stack) { return inventory.isItemValid(slot, stack); }
+        @Override public boolean isItemValid(int slot, ItemStack stack) {
+            return (slot == SCROLL_SLOT || slot == INK_SLOT) && canReassignPrimary(stack)
+                    || inventory.isItemValid(slot, stack);
+        }
     };
     private final IFluidHandler fluidInput = new IFluidHandler() {
         @Override public int getTanks() { return 1; }
@@ -198,6 +213,8 @@ public class AscensionChamberBlockEntity extends BlockEntity implements IHaveGog
     private boolean manualBookSelectionLocked;
     private int selectedBookSpellSlot = -1;
     private int manualSelectionRevision;
+    /** Separate from spell selection: stale interaction packets cannot collect a replacement stack. */
+    private int manualDisplayRevision;
     private long manualSelectedAt = -1;
     private ItemStack selectionPrimary = ItemStack.EMPTY;
     /** Immutable transaction description: a reload or input change cannot switch an in-flight recipe. */
@@ -398,18 +415,26 @@ public class AscensionChamberBlockEntity extends BlockEntity implements IHaveGog
     public String getManualOperation() { return manualOperation; }
     public ItemStack getManualPrimary() {
         if (isResearchProcessing()) return ItemStack.of(manualTransaction.getCompound("Primary"));
-        return inventory.getStackInSlot(manualResultReady ? RESULT_SLOT : SCROLL_SLOT).copy();
+        return inventory.getStackInSlot(manualResultReady || !inventory.getStackInSlot(RESULT_SLOT).isEmpty()
+                ? RESULT_SLOT : SCROLL_SLOT).copy();
     }
     public ItemStack getManualSecondary() {
         if (isResearchProcessing()) return ItemStack.of(manualTransaction.getCompound("Modifier"));
-        ItemStack stack = inventory.getStackInSlot(manualResultReady ? BOTTLE_SLOT : INK_SLOT);
-        if (stack.isEmpty() || stack.getItem() instanceof InkItem || stack.is(Items.GLASS_BOTTLE)) return ItemStack.EMPTY;
-        return !manualResultReady || UpgradeOrbTypeData.has(stack) ? stack.copy() : ItemStack.EMPTY;
+        ItemStack stack = inventory.getStackInSlot(manualResultReady || !inventory.getStackInSlot(BOTTLE_SLOT).isEmpty()
+                ? BOTTLE_SLOT : INK_SLOT);
+        return stack.copy();
     }
     public ItemStack getManualResultSecondary() { return inventory.getStackInSlot(BOTTLE_SLOT).copy(); }
     public boolean isManualBookSelectionLocked() { return manualBookSelectionLocked; }
     public int getSelectedBookSpellSlot() { return selectedBookSpellSlot; }
     public int getManualSelectionRevision() { return manualSelectionRevision; }
+    public int getManualDisplayRevision() { return manualDisplayRevision; }
+    /** Existing persisted fields identify the rearmed input; no second ownership marker is stored. */
+    public boolean isBookRearmed() {
+        return !manualProcessing && !manualResultReady && manualOperation.isEmpty() && manualCompletedAt >= 0
+                && inventory.getStackInSlot(RESULT_SLOT).isEmpty()
+                && inventory.getStackInSlot(SCROLL_SLOT).getItem() instanceof ISpellbook;
+    }
     public List<SpellData> getManualBookSpells() { return ManualUpgradeRecipes.selectableSpells(getManualPrimary()); }
 
     /** The packet handler also checks reach and the exact block ray hit before calling this. */
@@ -454,6 +479,7 @@ public class AscensionChamberBlockEntity extends BlockEntity implements IHaveGog
             manualExtraReturns.clear();
             clearManualResult();
         } finally { manualMutation = false; }
+        advanceDisplayRevision();
         contentsChanged();
         returned.forEach(stack -> ItemHandlerHelper.giveItemToPlayer(player, stack));
         return true;
@@ -498,6 +524,7 @@ public class AscensionChamberBlockEntity extends BlockEntity implements IHaveGog
         if (!blazeAlive || lightningFireCleanupTicks > 0) clearExternalSelfFire();
         if (lightningFireCleanupTicks > 0) lightningFireCleanupTicks--;
         if (blazeAlive) convertQueuedEssence();
+        rearmCompletedBook();
         if (isResearchProcessing()) {
             // Adding a basin, unloading, headwear changes or output blockage never invalidate a paid draw.
             clearProgress();
@@ -526,6 +553,36 @@ public class AscensionChamberBlockEntity extends BlockEntity implements IHaveGog
         updateMode();
         setChanged();
         if (level.getGameTime() % 10 == 0) sync();
+    }
+
+    /**
+     * Move the same owned result back to the input exactly once. Bottle/refund ownership is
+     * independent, and still blocks the next material until every pending return is collected.
+     */
+    private void rearmCompletedBook() {
+        if (!manualResultReady || manualProcessing || level == null || getBasin() != null
+                || manualCompletedAt < 0 || level.getGameTime() - manualCompletedAt < BOOK_REARM_TICKS
+                || !(ManualUpgradeRecipes.BOOK_SPELL_UPGRADE.equals(manualOperation)
+                || ManualUpgradeRecipes.BOOK_SLOT_UPGRADE.equals(manualOperation))) return;
+        ItemStack output = inventory.getStackInSlot(RESULT_SLOT);
+        if (output.getCount() != 1 || !(output.getItem() instanceof ISpellbook)
+                || !inventory.getStackInSlot(SCROLL_SLOT).isEmpty()) return;
+        manualMutation = true;
+        try {
+            inventory.setStackInSlot(RESULT_SLOT, ItemStack.EMPTY);
+            inventory.setStackInSlot(SCROLL_SLOT, output);
+            manualResultReady = false;
+            manualTransaction = new CompoundTag();
+            manualProgress = 0;
+            manualStartedAt = -1;
+            manualOperation = "";
+            selectionPrimary = output.copy();
+            resetBookSelection();
+            // completedAt and itemPlacedAt intentionally stay unchanged: presentation is
+            // already settled, and promotion is not another placement or completion event.
+        } finally { manualMutation = false; }
+        advanceDisplayRevision();
+        contentsChanged();
     }
 
     private void convertQueuedEssence() {
@@ -572,7 +629,7 @@ public class AscensionChamberBlockEntity extends BlockEntity implements IHaveGog
     }
 
     private Optional<ManualPlan> findManualPlan() {
-        if (level == null || !blazeAlive || !hasTemplate() || getBasin() != null || manualResultReady
+        if (level == null || !blazeAlive || getBasin() != null || manualResultReady
                 || !inventory.getStackInSlot(RESULT_SLOT).isEmpty()
                 || !inventory.getStackInSlot(BOTTLE_SLOT).isEmpty() || !manualExtraReturns.isEmpty()) return Optional.empty();
         ItemStack primary = inventory.getStackInSlot(SCROLL_SLOT);
@@ -618,12 +675,12 @@ public class AscensionChamberBlockEntity extends BlockEntity implements IHaveGog
     }
 
     /**
-     * Atomic ownership transfer: exactly one blank and 500 physical mB become one persisted result.
+     * Atomic ownership transfer: one blank, one guide and 500 physical mB become one persisted result.
      * The animation exposes that already-owned result later; it cannot refund, reroll or charge again.
      * Upgrade quarter-mB credit is deliberately not consulted by this new-spell operation.
      */
     private boolean tryStartResearch() {
-        if (level == null || level.isClientSide || !blazeAlive || !hasTemplate() || getBasin() != null
+        if (level == null || level.isClientSide || !blazeAlive || getBasin() != null
                 || manualProcessing || manualResultReady || !manualExtraReturns.isEmpty()
                 || !inventory.getStackInSlot(RESULT_SLOT).isEmpty()
                 || !inventory.getStackInSlot(BOTTLE_SLOT).isEmpty()
@@ -649,6 +706,7 @@ public class AscensionChamberBlockEntity extends BlockEntity implements IHaveGog
         transaction.putInt("DrawnTier", draw.drawnTier());
         transaction.putInt("ActualTier", draw.actualTier());
         transaction.putInt("PhysicalCostMb", RandomResearchRules.SOLUTION_COST_MB);
+        transaction.putBoolean("GuideConsumed", true);
         transaction.putBoolean("Crimson", crimson);
         transaction.putBoolean("Headwear", headwear);
         transaction.putLong("VisualSeed", level.random.nextLong());
@@ -658,6 +716,7 @@ public class AscensionChamberBlockEntity extends BlockEntity implements IHaveGog
         try {
             // Both handlers belong to this block entity and invoke no external capability callbacks.
             inventory.extractItem(SCROLL_SLOT, 1, false);
+            inventory.extractItem(INK_SLOT, 1, false);
             sourceTank.drain(RandomResearchRules.SOLUTION_COST_MB, IFluidHandler.FluidAction.EXECUTE);
             manualTransaction = transaction;
             manualOperation = RandomResearchRules.OPERATION;
@@ -666,6 +725,7 @@ public class AscensionChamberBlockEntity extends BlockEntity implements IHaveGog
             manualStartedAt = level.getGameTime();
             manualCompletedAt = -1;
         } finally { manualMutation = false; }
+        advanceDisplayRevision();
         contentsChanged();
         return true;
     }
@@ -675,7 +735,7 @@ public class AscensionChamberBlockEntity extends BlockEntity implements IHaveGog
         // Elapsed render time follows paid work ticks, including after a saved chunk is reloaded.
         manualStartedAt = level.getGameTime() - manualProgress;
         ItemStack output = ItemStack.of(manualTransaction.getCompound("Output"));
-        boolean canAdvance = blazeAlive && hasTemplate() && getBasin() == null && !output.isEmpty()
+        boolean canAdvance = blazeAlive && getBasin() == null && !output.isEmpty()
                 && fitsOutput(RESULT_SLOT, output) && inventory.getStackInSlot(BOTTLE_SLOT).isEmpty();
         if (researchVisualRunning != canAdvance) {
             researchVisualRunning = canAdvance;
@@ -693,6 +753,7 @@ public class AscensionChamberBlockEntity extends BlockEntity implements IHaveGog
             manualResultReady = true;
             manualCompletedAt = level.getGameTime();
         } finally { manualMutation = false; }
+        advanceDisplayRevision();
         contentsChanged();
     }
 
@@ -746,6 +807,7 @@ public class AscensionChamberBlockEntity extends BlockEntity implements IHaveGog
             manualTransaction = new CompoundTag();
             // Preserve the confirmed selection for the completed book's visual pose.
         } finally { manualMutation = false; }
+        advanceDisplayRevision();
         contentsChanged();
         return true;
     }
@@ -802,7 +864,7 @@ public class AscensionChamberBlockEntity extends BlockEntity implements IHaveGog
     }
 
     private Optional<Plan> findPlan() {
-        if (!blazeAlive || !hasTemplate() || manualProcessing || manualResultReady) return Optional.empty();
+        if (!blazeAlive || manualProcessing || manualResultReady) return Optional.empty();
         BasinBlockEntity basin = getBasin();
         if (basin != null) {
             IFluidHandler inkTank = basin.inputTank.getCapability().orElse(null);
@@ -1002,7 +1064,14 @@ public class AscensionChamberBlockEntity extends BlockEntity implements IHaveGog
             return true;
         }
         if (held.is(CrimsonContent.EMBER_CAKE.get()) && !isTranscendent()) return false;
-        int[] inputs = {TEMPLATE_SLOT, SCROLL_SLOT, INK_SLOT, CAKE_SLOT};
+        // A spell scroll can be either the object to upgrade or the material for native imbuing.
+        // Resolve that ambiguity when the second object arrives, without requiring an insertion order.
+        if (canReassignPrimary(held)) {
+            reassignPrimary(held);
+            if (!creative) held.shrink(1);
+            return true;
+        }
+        int[] inputs = {SCROLL_SLOT, INK_SLOT, CAKE_SLOT};
         for (int slot : inputs) {
             if (!inventory.isItemValid(slot, held)) continue;
             ItemStack single = held.copy();
@@ -1013,6 +1082,30 @@ public class AscensionChamberBlockEntity extends BlockEntity implements IHaveGog
             return true;
         }
         return false;
+    }
+
+    private boolean canReassignPrimary(ItemStack incoming) {
+        ItemStack first = inventory.getStackInSlot(SCROLL_SLOT);
+        return !incoming.isEmpty() && canAcceptManualInputs() && first.getCount() == 1
+                && inventory.getStackInSlot(INK_SLOT).isEmpty() && ChamberInputRules.isPrimary(incoming)
+                && ChamberInputRules.isSecondary(first) && ChamberInputRules.canPair(level, incoming, first);
+    }
+
+    private boolean canAcceptManualInputs() {
+        return !manualProcessing && !manualResultReady && inventory.getStackInSlot(RESULT_SLOT).isEmpty()
+                && inventory.getStackInSlot(BOTTLE_SLOT).isEmpty() && manualExtraReturns.isEmpty();
+    }
+
+    private void reassignPrimary(ItemStack incoming) {
+        ItemStack first = inventory.getStackInSlot(SCROLL_SLOT);
+        manualMutation = true;
+        try {
+            inventory.setStackInSlot(INK_SLOT, first.copy());
+            inventory.setStackInSlot(SCROLL_SLOT, incoming.copyWithCount(1));
+            manualMaterialPlacedAt = level == null ? -1 : level.getGameTime();
+        } finally { manualMutation = false; }
+        // Recompute selection and send exactly one synchronized, fully assigned pair.
+        inventoryContentsChanged(SCROLL_SLOT);
     }
 
     public boolean acceptsInputType(ItemStack held) {
@@ -1029,6 +1122,31 @@ public class AscensionChamberBlockEntity extends BlockEntity implements IHaveGog
             if (!extracted.isEmpty()) return extracted;
         }
         return ItemStack.EMPTY;
+    }
+
+    /**
+     * Deliver exactly the clicked display, never another slot. Existing oversized saves are
+     * deliberately read without truncation and can be recovered one original item per click.
+     * This method clears ownership before calling the player inventory helper.
+     */
+    public boolean takeDisplayedManualItem(Player player, int displayedSlot) {
+        if (level == null || level.isClientSide || player.level() != level || !player.isAlive()
+                || player.isSpectator() || player.distanceToSqr(Vec3.atCenterOf(worldPosition)) > 64
+                || manualProcessing || getBasin() != null || displayedSlot < 0 || displayedSlot > 1) return false;
+        int slot = manualResultReady
+                ? displayedSlot == 0 ? RESULT_SLOT : BOTTLE_SLOT
+                : displayedSlot == 0 ? inventory.getStackInSlot(RESULT_SLOT).isEmpty() ? SCROLL_SLOT : RESULT_SLOT
+                : inventory.getStackInSlot(BOTTLE_SLOT).isEmpty() ? INK_SLOT : BOTTLE_SLOT;
+        if (inventory.getStackInSlot(slot).isEmpty()) return false;
+        ItemStack taken = inventory.extractItem(slot, 1, false);
+        if (taken.isEmpty()) return false;
+        // inventoryContentsChanged already atomically advanced the revision and promoted a refund.
+        ItemHandlerHelper.giveItemToPlayer(player, taken);
+        return true;
+    }
+
+    public boolean extractDisplayForPlayer(ServerPlayer player, int displayedSlot) {
+        return takeDisplayedManualItem(player, displayedSlot);
     }
 
     private void clearProgress() { progress = 0; activeScroll = ItemStack.EMPTY; }
@@ -1051,6 +1169,7 @@ public class AscensionChamberBlockEntity extends BlockEntity implements IHaveGog
     }
     private void inventoryContentsChanged(int slot) {
         if (manualMutation) return;
+        advanceDisplayRevision();
         // Input snapshots belong to the paid transaction. Even an internal inventory mutation
         // must not clear its operation key and accidentally turn a pause into a fresh draw.
         if (isResearchProcessing()) {
@@ -1073,14 +1192,16 @@ public class AscensionChamberBlockEntity extends BlockEntity implements IHaveGog
             manualMaterialPlacedAt = level.getGameTime();
         }
         // Preserve arbitrary native orb refunds even when automation empties slot 4 first.
-        if (manualResultReady && (slot == RESULT_SLOT || slot == BOTTLE_SLOT)) {
+        if ((manualResultReady || isBookRearmed() || !manualExtraReturns.isEmpty())
+                && (slot == RESULT_SLOT || slot == BOTTLE_SLOT)) {
             manualMutation = true;
             try {
                 if (inventory.getStackInSlot(BOTTLE_SLOT).isEmpty() && !manualExtraReturns.isEmpty()) {
                     inventory.setStackInSlot(BOTTLE_SLOT, manualExtraReturns.remove(0));
                 }
                 if (inventory.getStackInSlot(RESULT_SLOT).isEmpty()
-                        && inventory.getStackInSlot(BOTTLE_SLOT).isEmpty() && manualExtraReturns.isEmpty()) clearManualResult();
+                        && inventory.getStackInSlot(BOTTLE_SLOT).isEmpty() && manualExtraReturns.isEmpty()
+                        && !isBookRearmed()) clearManualResult();
             } finally { manualMutation = false; }
         }
         contentsChanged();
@@ -1088,6 +1209,9 @@ public class AscensionChamberBlockEntity extends BlockEntity implements IHaveGog
     private void contentsChanged() {
         if (manualMutation) return;
         setChanged(); updateMode(); sync();
+    }
+    private void advanceDisplayRevision() {
+        manualDisplayRevision = manualDisplayRevision == Integer.MAX_VALUE ? 0 : manualDisplayRevision + 1;
     }
     private void updateMode() {
         if (level == null || level.isClientSide) return;
@@ -1128,6 +1252,7 @@ public class AscensionChamberBlockEntity extends BlockEntity implements IHaveGog
         tag.putBoolean("ManualBookSelectionLocked", manualBookSelectionLocked);
         tag.putInt("SelectedBookSpellSlot", selectedBookSpellSlot);
         tag.putInt("ManualSelectionRevision", manualSelectionRevision);
+        tag.putInt("ManualDisplayRevision", manualDisplayRevision);
         tag.putLong("ManualSelectedAt", manualSelectedAt);
         tag.put("ManualTransaction", manualTransaction.copy());
         ListTag returns = new ListTag();
@@ -1188,6 +1313,7 @@ public class AscensionChamberBlockEntity extends BlockEntity implements IHaveGog
         manualBookSelectionLocked = tag.getBoolean("ManualBookSelectionLocked");
         selectedBookSpellSlot = tag.contains("SelectedBookSpellSlot") ? tag.getInt("SelectedBookSpellSlot") : -1;
         manualSelectionRevision = Math.max(0, tag.getInt("ManualSelectionRevision"));
+        manualDisplayRevision = Math.max(0, tag.getInt("ManualDisplayRevision"));
         manualSelectedAt = tag.contains("ManualSelectedAt") ? tag.getLong("ManualSelectedAt") : -1;
         manualTransaction = tag.getCompound("ManualTransaction").copy();
         manualProcessing = tag.getBoolean("ManualProcessing") && !manualResultReady && !manualTransaction.isEmpty();

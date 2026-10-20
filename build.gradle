@@ -163,6 +163,8 @@ def releaseManifest = [
 def prototypeClasses = [
         'dev/expedition/arcane/testing/**',
         'dev/expedition/arcane/chamber/ChamberTests*',
+        'dev/expedition/arcane/chamber/ChamberInteractionRulesTests*',
+        'dev/expedition/arcane/chamber/ChamberDisplayHitTests*',
         'dev/expedition/arcane/chamber/ResearchPresentationTests*',
         'dev/expedition/arcane/chamber/ResearchVisualFixture*',
         'dev/expedition/arcane/client/PrototypeScreenshotRequests*',

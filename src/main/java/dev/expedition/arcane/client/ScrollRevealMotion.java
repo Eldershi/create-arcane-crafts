@@ -16,7 +16,9 @@ public final class ScrollRevealMotion {
     public static final double WORK_END = 58;
     public static final double OUTPUT_START = 58;
     public static final double SECONDARY_END = 44;
-    public static final double IDLE_HEIGHT = 1.12;
+    public static final double IDLE_HEIGHT = ChamberItemMotion.BASE_HEIGHT;
+    private static final double APPROVED_IDLE_HEIGHT = 1.12;
+    private static final double DISPLAY_LIFT = IDLE_HEIGHT - APPROVED_IDLE_HEIGHT;
     public static final double EFFECT_RIG_YAW = Math.PI + .46;
     private static final double HOVER_ANCHOR_Y = 1.344;
     private static final double HOVER_REFERENCE_TICK = 4.55 / 6.8 * 112;
@@ -42,17 +44,35 @@ public final class ScrollRevealMotion {
     public static Sample sample(double logicalTick) {
         Sample raw = rawSample(logicalTick);
         double progress = smooth5((raw.tick - 90) / 42);
-        double correction = (IDLE_HEIGHT - HOVER_ANCHOR_Y) * progress;
-        return raw.withPosition(raw.mainY + correction, raw.secondaryY + correction, progress);
+        double correction = (APPROVED_IDLE_HEIGHT - HOVER_ANCHOR_Y) * progress;
+        return raw.withPosition(raw.mainY + DISPLAY_LIFT + correction,
+                raw.secondaryY + DISPLAY_LIFT + correction, progress);
     }
 
     /** Adds the same continuous, item-only idle sine used before and after repeated upgrades. */
     public static Sample sample(double logicalTick, double idleSeconds) {
         Sample value = sample(logicalTick);
         double gate = 1 - ease(value.tick / 12) + ease((value.tick - 88) / 22);
-        double angle = finite(idleSeconds) * 2 * Math.PI / ChamberItemMotion.IDLE_PERIOD_SECONDS;
-        return value.withPosition(value.mainY + .008 * Math.sin(angle) * gate,
-                value.secondaryY + .008 * Math.sin(angle + .65) * gate, value.returnProgress);
+        return value.withPosition(value.mainY + ChamberItemMotion.idle(finite(idleSeconds)).y() * gate,
+                value.secondaryY + ChamberItemMotion.idle(finite(idleSeconds),
+                        ChamberItemMotion.SECONDARY_PHASE).y() * gate, value.returnProgress);
+    }
+
+    /**
+     * A paid transaction cannot run backwards. Packet/time corrections may lower
+     * a raw interpolated sample, but must never re-show a faded imprint or burst.
+     * The owner creates a new cursor only when the immutable transaction changes.
+     */
+    public static final class PresentationClock {
+        private double shown;
+        private boolean complete;
+
+        public double sample(double candidate, boolean completed) {
+            complete |= completed;
+            shown = complete ? DURATION_TICKS : Math.max(shown,
+                    Math.max(0, Math.min(DURATION_TICKS, finite(candidate))));
+            return shown;
+        }
     }
 
     /**
@@ -194,6 +214,10 @@ public final class ScrollRevealMotion {
                          double inertiaOffset, double inertiaRoll, double angularRecoil,
                          double swayEnvelope, double mainSettle, double secondarySettle,
                          double floatClock, double hoverClock, boolean settled, double returnProgress) {
+        public Sample withClearance(double mainLowestPoint, double secondaryLowestPoint) {
+            return withPosition(ChamberItemMotion.clearHeight(mainY, mainLowestPoint),
+                    ChamberItemMotion.clearHeight(secondaryY, secondaryLowestPoint), returnProgress);
+        }
         private Sample withPosition(double main, double secondary, double returned) {
             return new Sample(tick, mainX, main, secondaryX, secondary, mergeProgress,
                     mainAngle, orientationCurveT, angularPitch, angularYaw, angularRoll, imprintAlpha,

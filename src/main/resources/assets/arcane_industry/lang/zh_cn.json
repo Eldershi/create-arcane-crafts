@@ -40,5 +40,10 @@
   "tooltip.arcane_industry.grindstone.mode.water": "回收模式：水→奥术原液（锁定）",
   "tooltip.arcane_industry.grindstone.mode.blood": "回收模式：血→猩红原液（锁定）",
   "tooltip.arcane_industry.grindstone.reagent": "回收输入：%s / %s mB",
-  "tooltip.arcane_industry.grindstone.solution": "回收输出：%s / %s mB"
+  "tooltip.arcane_industry.grindstone.solution": "回收输出：%s / %s mB",
+  "gui.arcane_industry.chamber.processing": "加工中，完成后可取回物品",
+  "gui.arcane_industry.chamber.aim_to_take": "空手对准悬浮物品右键，单独取回",
+  "gui.arcane_industry.chamber.empty_book": "书中尚无法术",
+  "gui.arcane_industry.chamber.empty_book_hint": "先用卷轴铭刻法术 · 空手右键取回书本",
+  "gui.arcane_industry.chamber.select_hint": "滚轮选术 · 中键确认 · 空手右键取回"
 }

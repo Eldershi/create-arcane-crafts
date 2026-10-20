@@ -11,12 +11,16 @@ NOT AN OFFICIAL MINECRAFT PRODUCT. NOT APPROVED BY OR ASSOCIATED WITH MOJANG OR 
 ## 功能
 
 - **奥术升华室**：手动／动力卷轴升级、书内选定法术升级、超越升级，以及六类原生奥术铁砧操作。
-- **随机研习**：空白卷轴、可复用学派引导物与原液生成真实 1 级卷轴；约 8 秒结晶揭示，史诗／传说有延迟涡流，传说增加卢恩字符。
+- **随机研习**：每次消耗空白卷轴、学派引导物各 1 件及 500 mB 原液，生成真实 1 级卷轴；约 8 秒结晶揭示，史诗／传说有延迟涡流，传说增加卢恩字符。
 - **工业加工**：卷轴打印与注墨、奥术／猩红原液、墨水、源质及压缩块。
 - **奥术砂轮与分液池**：保留 CEI 原生行为，叠加法术／法球干磨和湿磨回收。
 - **奥术舱口与补给**：瓶桶流体交易、背包奥术补给、JEI 配方展示。
 
 当前版本为 **[0.1.0](https://github.com/Eldershi/create-arcane-crafts/releases/tag/v0.1.0)**，功能与数值仍会继续迭代。内部命名空间保持 `arcane_industry`，原有方块、物品和存档标识保持。
+
+当前工作区包含发行后的交互修复，详见 [未发布更新](CHANGELOG.md)；不代表已发布的 0.1.0 二进制已变更。升华室由锻造台消耗升华模板、烈焰人燃烧室和奥术铁砧合成，开工无需另装模板。主副物品各限 1 件，空手右键取下准星所指的物品；法术书滚轮选术、中键确认。
+
+本轮构建、服务端四套检查、原生书本连续升级及 BSL 对照结果见 [后续修复验收](docs/verification/post-0.1.0-2026-10-20.md)。交互协议为 2，客户端与专服需要同步更新。
 
 ## 构建
 
@@ -68,6 +72,7 @@ GitHub Actions 在每次推送和拉取请求中从干净检出执行构建，�
 - [运行时资源实现和离线验证](docs/runtime-assets.md)
 - [开发经验、维护约束与验收命令](docs/DEVELOPMENT.md)
 - [发布验收清单](docs/RELEASE_CHECKLIST.md)
+- [全部功能逐项测试清单（操作与预期）](docs/FUNCTIONAL_ACCEPTANCE.md)
 - [0.1.0 验收记录](docs/releases/0.1.0.md)与[更新记录](CHANGELOG.md)
 - [r57 奥术砂轮定稿与渲染接入](docs/grindstone-r57.md)
 - [卷轴揭示、待机浮动与原生光效接入](docs/scroll-reveal-integration.md)

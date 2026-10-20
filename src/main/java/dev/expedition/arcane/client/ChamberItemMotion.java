@@ -2,11 +2,18 @@ package dev.expedition.arcane.client;
 
 /** Native 3.5-second work motion and the approved C2 return to repeated-upgrade idle. */
 public final class ChamberItemMotion {
-    public static final double IDLE_AMPLITUDE = .008;
-    public static final double IDLE_PERIOD_SECONDS = 4.8;
+    public static final double IDLE_AMPLITUDE = .035;
+    public static final double IDLE_PERIOD_SECONDS = 5.6;
     public static final double COMPLETION_SETTLE_SECONDS = 1.2;
-    public static final double BASE_HEIGHT = 1.12;
-    public static final double WORK_HEIGHT = 1.28;
+    public static final double BASE_HEIGHT = 1.52;
+    public static final double WORK_HEIGHT = BASE_HEIGHT + .16;
+    public static final double BOOK_BASE_HEIGHT = 1.34;
+    public static final double BOOK_WORK_HEIGHT = BOOK_BASE_HEIGHT + .16;
+    public static final double BOOK_REST_TILT_DEGREES = 100;
+    public static final double BOOK_OPEN_TILT_DEGREES = 10;
+    public static final double SLOT_HORIZONTAL = .40;
+    /** The cage is one block high; reserve visible air above its highest rim. */
+    public static final double CLEARANCE_FLOOR = 1.06;
     public static final double WORK_SECONDS = 3.5;
     public static final double MAIN_PHASE = 0;
     public static final double SECONDARY_PHASE = 1.1;
@@ -16,6 +23,29 @@ public final class ChamberItemMotion {
     private ChamberItemMotion() {}
 
     public static Kinematic idle(double seconds) { return idle(seconds, MAIN_PHASE); }
+
+    /** Shared by item rendering and server-validated picking. */
+    public static double idleHeight(double seconds, boolean secondary) {
+        return idleHeight(seconds, secondary, false);
+    }
+
+    public static double idleHeight(double seconds, boolean secondary, boolean book) {
+        return (book ? BOOK_BASE_HEIGHT : BASE_HEIGHT)
+                + idle(seconds, secondary ? SECONDARY_PHASE : MAIN_PHASE).y;
+    }
+
+    /** The player's near edge dips ten degrees as the articulated book opens. */
+    public static ScrollRevealMotion.Quaternion bookOrientation(double yaw, double open, double impact) {
+        double tilt = BOOK_REST_TILT_DEGREES + BOOK_OPEN_TILT_DEGREES * ScrollRevealMotion.ease(open)
+                + impact * .7;
+        return ScrollRevealMotion.Quaternion.eulerXYZ(0, yaw + Math.PI / 2, 0)
+                .multiply(ScrollRevealMotion.Quaternion.eulerXYZ(0, 0, Math.toRadians(tilt)));
+    }
+
+    /** Resource-pack meshes may extend beyond a vanilla sprite's nominal box. */
+    public static double clearHeight(double proposed, double localLowestPoint) {
+        return Math.max(proposed, CLEARANCE_FLOOR - localLowestPoint);
+    }
 
     /** Offset from the original item height, with analytic first and second derivatives. */
     public static Kinematic idle(double seconds, double phase) {
@@ -27,6 +57,24 @@ public final class ChamberItemMotion {
 
     public static Kinematic processing(double seconds, boolean operation, boolean secondary) {
         return processing(seconds, BASE_HEIGHT, WORK_HEIGHT, operation, secondary);
+    }
+
+    /** Carry the existing absolute idle phase into the work lift, without a placement jump. */
+    public static Kinematic processing(double seconds, double absoluteSeconds, boolean operation, boolean secondary) {
+        return processing(seconds, absoluteSeconds, operation, secondary, false);
+    }
+
+    public static Kinematic processing(double seconds, double absoluteSeconds, boolean operation,
+                                       boolean secondary, boolean book) {
+        Kinematic work = processing(seconds, book ? BOOK_BASE_HEIGHT : BASE_HEIGHT,
+                book ? BOOK_WORK_HEIGHT : WORK_HEIGHT, operation, secondary);
+        double u = Math.max(0, Math.min(1, seconds / .75));
+        double gate = 1 - ScrollRevealMotion.smooth5(u);
+        double gateV = seconds > 0 && seconds < .75 ? -30 * u * u * (u - 1) * (u - 1) / .75 : 0;
+        double gateA = seconds > 0 && seconds < .75 ? -60 * u * (2 * u * u - 3 * u + 1) / (.75 * .75) : 0;
+        Kinematic idle = idle(absoluteSeconds, secondary ? SECONDARY_PHASE : MAIN_PHASE);
+        return new Kinematic(work.y + idle.y * gate, work.vy + idle.vy * gate + idle.y * gateV,
+                work.ay + idle.ay * gate + 2 * idle.vy * gateV + idle.y * gateA);
     }
 
     public static Kinematic processing(double seconds, double base, double working,
@@ -45,7 +93,13 @@ public final class ChamberItemMotion {
     }
 
     public static Kinematic completed(double seconds, double absoluteSeconds, boolean operation, boolean secondary) {
-        return completed(seconds, absoluteSeconds, BASE_HEIGHT, WORK_HEIGHT, WORK_SECONDS,
+        return completed(seconds, absoluteSeconds, operation, secondary, false);
+    }
+
+    public static Kinematic completed(double seconds, double absoluteSeconds, boolean operation,
+                                      boolean secondary, boolean book) {
+        return completed(seconds, absoluteSeconds, book ? BOOK_BASE_HEIGHT : BASE_HEIGHT,
+                book ? BOOK_WORK_HEIGHT : WORK_HEIGHT, WORK_SECONDS,
                 COMPLETION_SETTLE_SECONDS, operation, secondary);
     }
 
@@ -87,8 +141,12 @@ public final class ChamberItemMotion {
     }
 
     public static Pose pose(double phaseSeconds, double absoluteSeconds, boolean completed, boolean operation) {
-        Kinematic vertical = completed ? completed(phaseSeconds, absoluteSeconds, operation, false)
-                : processing(phaseSeconds, operation, false);
+        return pose(phaseSeconds, absoluteSeconds, completed, operation, false);
+    }
+
+    public static Pose pose(double phaseSeconds, double absoluteSeconds, boolean completed, boolean operation, boolean book) {
+        Kinematic vertical = completed ? completed(phaseSeconds, absoluteSeconds, operation, false, book)
+                : processing(phaseSeconds, absoluteSeconds, operation, false, book);
         Kinematic angular = completed ? completionRotation(phaseSeconds)
                 : new Kinematic(phaseSeconds * ANGULAR_RATE, ANGULAR_RATE, 0);
         return new Pose(vertical, angular, completed,

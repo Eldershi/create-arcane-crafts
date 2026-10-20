@@ -23,8 +23,8 @@ public final class AscensionAssemblySubCategory extends SequencedAssemblySubCate
     @Override public void setRecipe(IRecipeLayoutBuilder builder, SequencedRecipe<?> step, IFocusGroup focuses, int x) {
         builder.addSlot(RecipeIngredientRole.CATALYST, x + 7, 15)
                 .setBackground(CreateRecipeCategory.getRenderedSlot(), -1, -1)
-                .addItemStack(new ItemStack(ArcaneContent.TEMPLATE.get()))
-                .addTooltipCallback((slot, tooltip) -> tooltip.add(Component.literal("升华模板保留，重复使用。")));
+                .addItemStack(new ItemStack(ArcaneContent.CHAMBER.get()))
+                .addTooltipCallback((slot, tooltip) -> tooltip.add(Component.literal("在工作盆下方安装升华室。")));
         NativeAssemblyDisplays.ascensionStep(step.getRecipe()).ifPresent(display -> {
             var upgrade = display.upgrade();
             // This real first-step output is also accepted directly by the chamber. Index it

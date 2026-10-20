@@ -69,7 +69,7 @@ def replace_flag(arguments: list[str], flag: str, value: str) -> None:
     arguments.extend([flag, value])
 
 
-def build_command(world: str | None, server: str | None = None) -> tuple[list[str], dict]:
+def build_command(world: str | None, server: str | None = None, *, presentation_trace: bool = False) -> tuple[list[str], dict]:
     if world is not None and (not world or world in {".", ".."} or Path(world).name != world):
         raise ValueError("World must be a single save-directory name inside this prototype instance")
     with sqlite3.connect(LAUNCHER_DB.as_uri() + "?mode=ro", uri=True) as connection:
@@ -107,6 +107,8 @@ def build_command(world: str | None, server: str | None = None) -> tuple[list[st
         replace_flag(arguments, flag, value)
     arguments[:0] = ["-Xms512M", "-Xmx6144M", f"-XX:ErrorFile={EVIDENCE}/hs_err_pid%p.log",
                      f"-XX:HeapDumpPath={EVIDENCE}", "-Darcane.prototype=true"]
+    if presentation_trace:
+        arguments.insert(0, "-Darcane.presentation.trace=true")
     save = INSTANCE / "saves" / world if world else None
     quick_play = bool(save and (save / "level.dat").is_file())
     if server:
@@ -137,11 +139,12 @@ def main() -> None:
     parser.add_argument("--server", help="Connect only to the disposable local test server")
     parser.add_argument("--stop", action="store_true", help="SIGTERM only this tool's verified recorded Java PID")
     parser.add_argument("--wait", action="store_true", help="Wait for this client and record its exit code")
+    parser.add_argument("--presentation-trace", action="store_true", help="Opt in to per-tick reveal diagnostics for acceptance")
     options = parser.parse_args()
     if options.stop:
         stop(dry_run=options.dry_run)
         return
-    command, receipt = build_command(options.world, options.server)
+    command, receipt = build_command(options.world, options.server, presentation_trace=options.presentation_trace)
     print(json.dumps({**receipt, "dryRun": options.dry_run}, ensure_ascii=False, indent=2), flush=True)
     if options.dry_run:
         return

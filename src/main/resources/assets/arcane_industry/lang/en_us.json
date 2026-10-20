@@ -40,5 +40,10 @@
   "tooltip.arcane_industry.grindstone.mode.water": "Recovery: water to arcane solution (locked)",
   "tooltip.arcane_industry.grindstone.mode.blood": "Recovery: blood to crimson solution (locked)",
   "tooltip.arcane_industry.grindstone.reagent": "Recovery input: %s / %s mB",
-  "tooltip.arcane_industry.grindstone.solution": "Recovery output: %s / %s mB"
+  "tooltip.arcane_industry.grindstone.solution": "Recovery output: %s / %s mB",
+  "gui.arcane_industry.chamber.processing": "Processing; collect the items when complete",
+  "gui.arcane_industry.chamber.aim_to_take": "Aim at a floating item and right-click empty-handed to collect it",
+  "gui.arcane_industry.chamber.empty_book": "This spell book has no spells",
+  "gui.arcane_industry.chamber.empty_book_hint": "Inscribe a scroll first; right-click empty-handed to retrieve the book",
+  "gui.arcane_industry.chamber.select_hint": "Scroll to select; middle-click to confirm; empty-hand right-click to collect"
 }

@@ -62,7 +62,7 @@ final class ChamberScrollRevealRenderer {
                 ItemStack primary, ItemStack secondary, ItemStack output, boolean crimson,
                 int rarityOrdinal, long seed, Quaternionf restQuaternion) {
         if (primary.isEmpty() || output.isEmpty()) return;
-        double tick = Math.max(0, Math.min(132, Double.isFinite(logicalTick) ? logicalTick : 0));
+        double candidate = Math.max(0, Math.min(132, Double.isFinite(logicalTick) ? logicalTick : 0));
         Transaction transaction = transactions.get(chamber);
         if (transaction == null || transaction.seed != seed || !transaction.primary.matches(primary)
                 || !transaction.secondary.matches(secondary) || !transaction.output.matches(output)) {
@@ -70,10 +70,26 @@ final class ChamberScrollRevealRenderer {
                     geometry(primary, chamber), geometry(secondary, chamber), geometry(output, chamber));
             transactions.put(chamber, transaction);
         }
+        boolean completed = !chamber.isManualProcessing() && chamber.getManualCompletedAt() >= 0;
+        double tick = transaction.clock.sample(candidate, completed);
         var motion = ScrollRevealMotion.sample(tick, wallSeconds);
         var rest = new ScrollRevealMotion.Quaternion(restQuaternion.x, restQuaternion.y,
                 restQuaternion.z, restQuaternion.w);
         Quaternionf itemRotation = quaternion(ScrollRevealMotion.pose(motion, rest));
+        ItemGeometry visibleMain = tick < 58 ? transaction.mainGeometry : transaction.outputGeometry;
+        motion = motion.withClearance(visibleMain.minimumY(itemRotation, transaction.main.size),
+                transaction.secondaryGeometry.minimumY(itemRotation, transaction.sub.size));
+        if (Boolean.getBoolean("arcane.presentation.trace") && (transaction.traceTick != (int) tick
+                || candidate + .0001 < transaction.traceCandidate || completed != transaction.traceCompleted)) {
+            com.mojang.logging.LogUtils.getLogger().info(
+                    "Chamber reveal {} seed={} server={} candidate={} shown={} imprint={} completed={} primaryY={} secondaryY={} minY={} outputFoil={}",
+                    chamber.getBlockPos(), seed, chamber.getManualProgress(), candidate, tick, motion.imprintAlpha(),
+                    completed, motion.mainY(), motion.secondaryY(),
+                    motion.mainY() + visibleMain.minimumY(itemRotation, transaction.main.size), output.hasFoil());
+            transaction.traceTick = (int) tick;
+            transaction.traceCandidate = candidate;
+            transaction.traceCompleted = completed;
+        }
         Quaternionf billboard = new Quaternionf(restQuaternion).rotateY((float) Math.PI);
         Palette palette = crimson ? Palette.COOL : Palette.GOLD;
         ParticleStatus particleStatus = Minecraft.getInstance().options.particles().get();
@@ -356,10 +372,8 @@ final class ChamberScrollRevealRenderer {
                         Math.min(1, r * 1.15F), Math.min(1, g * 1.15F), Math.min(1, b * 1.15F),
                         pixel.alpha * fade, overlay);
             }
-            // Small geometry halo; the crisp native fleck never becomes a blurred blob.
-            double glow = smooth(age / 2) * (1 - smooth((p - .62) / .38));
-            radial(pose, buffers.getBuffer(ChamberGlowRenderTypes.halo(WHITE)), row.size * .32,
-                    palette.halo, .04 * glow, overlay);
+            // The native pixel core supplies the glow. A separate radial mesh
+            // becomes a visible polygon through shader-pack emissive passes.
             pose.popPose();
         }
     }
@@ -458,19 +472,6 @@ final class ChamberScrollRevealRenderer {
         }
     }
 
-    private static void radial(PoseStack pose, VertexConsumer buffer, double radius, float[] color,
-                               double alpha, int overlay) {
-        if (alpha < .001) return;
-        for (int i = 0; i < 8; i++) {
-            double a = i / 8. * TAU, b = (i + 1) / 8. * TAU;
-            rawVertex(pose, buffer, 0, 0, .0002, .5F, .5F, color[0], color[1], color[2], alpha, overlay);
-            rawVertex(pose, buffer, Math.cos(a) * radius, Math.sin(a) * radius, .0002,
-                    .5F, .5F, color[0], color[1], color[2], 0, overlay);
-            for (int k = 0; k < 2; k++) rawVertex(pose, buffer, Math.cos(b) * radius,
-                    Math.sin(b) * radius, .0002, .5F, .5F, color[0], color[1], color[2], 0, overlay);
-        }
-    }
-
     private record ParticlePixel(double left, double bottom, double right, double top,
                                  float r, float g, float b, float alpha) {}
 
@@ -528,12 +529,26 @@ final class ChamberScrollRevealRenderer {
             for (int y = 0; y < GRID; y++) for (int x = 0; x < GRID; x++) if (occupied[y][x])
                 pixels.add(new Pixel((x + .5) / GRID - .5, .5 - (y + .5) / GRID, y, x));
         }
+        double minimumY(Quaternionf rotation, double scale) {
+            double minimum = Double.POSITIVE_INFINITY;
+            Vector3f point = new Vector3f();
+            for (Piece piece : pieces) for (Vertex vertex : piece.vertices) {
+                point.set((float) (vertex.x * scale), (float) (vertex.y * scale), (float) (vertex.z * scale));
+                point.rotate(rotation);
+                minimum = Math.min(minimum, point.y);
+            }
+            return Double.isFinite(minimum) ? minimum : -scale / 2;
+        }
     }
     private static final class Transaction {
         final long seed;
         final ItemKey primary, secondary, output;
         final ItemGeometry mainGeometry, secondaryGeometry, outputGeometry;
         final Layout main, sub;
+        final ScrollRevealMotion.PresentationClock clock = new ScrollRevealMotion.PresentationClock();
+        int traceTick = -1;
+        double traceCandidate;
+        boolean traceCompleted;
         Transaction(long seed, ItemStack primary, ItemStack secondary, ItemStack output,
                     ItemGeometry mainGeometry, ItemGeometry secondaryGeometry, ItemGeometry outputGeometry) {
             this.seed = seed; this.primary = new ItemKey(primary); this.secondary = new ItemKey(secondary);
@@ -660,16 +675,16 @@ final class ChamberScrollRevealRenderer {
         }
     }
     private static final class Palette {
-        static final Palette GOLD = new Palette(new float[]{1,.84F,.42F}, new float[]{1,.78F,.34F},
+        static final Palette GOLD = new Palette(new float[]{1,.84F,.42F},
                 new float[]{1,1,1}, new float[]{1,.84F,.42F},
                 new float[]{248/255F,186/255F,39/255F}, new float[]{1,240/255F,174/255F});
-        static final Palette COOL = new Palette(new float[]{.56F,.68F,1}, new float[]{.67F,.40F,.84F},
+        static final Palette COOL = new Palette(new float[]{.56F,.68F,1},
                 new float[]{.80F,.56F,.92F}, new float[]{.62F,.67F,1},
                 new float[]{104/255F,116/255F,220/255F}, new float[]{211/255F,213/255F,1});
-        final float[] core, halo, particle, rune, low, high;
+        final float[] core, particle, rune, low, high;
         private final float[] color = new float[3];
-        Palette(float[] core, float[] halo, float[] particle, float[] rune, float[] low, float[] high) {
-            this.core = core; this.halo = halo; this.particle = particle; this.rune = rune; this.low = low; this.high = high;
+        Palette(float[] core, float[] particle, float[] rune, float[] low, float[] high) {
+            this.core = core; this.particle = particle; this.rune = rune; this.low = low; this.high = high;
         }
         float[] grain(double x, double y, double tick) {
             double dx = tick * .004, dy = -tick * .002;

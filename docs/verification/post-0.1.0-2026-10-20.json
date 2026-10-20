@@ -1,0 +1,816 @@
+{
+  "status": "PASS",
+  "date": "2026-10-20",
+  "sourceBase": "6c779d7db572f6be8c97a1ab06028fb68ea24562",
+  "releasePolicy": "Unreleased follow-up on public main; published v0.1.0 tag and its binaries remain immutable.",
+  "environment": {
+    "minecraft": "1.20.1",
+    "forge": "47.4.10",
+    "java": 17,
+    "gradle": "8.8",
+    "os": "macOS arm64",
+    "shader": "BSL_v10.1.8 + Clrwl_1.0.5.zip",
+    "networkProtocol": 2
+  },
+  "artifacts": {
+    "production": {
+      "name": "create-arcane-crafts-0.1.0.jar",
+      "sha256": "c80c59f6c3d739513bbd21a982b8e3c1515a3ea2bb6a5494da2c9dde7bc10d32",
+      "sizeBytes": 674895,
+      "publishedReleaseAsset": false
+    },
+    "prototype": {
+      "name": "create-arcane-crafts-0.1.0-prototype.jar",
+      "sha256": "32737b29266810f935037e0f6fe2592ad94804e4db4c7c00946cc2e5b8aeebe2",
+      "sizeBytes": 875835,
+      "publishedReleaseAsset": false
+    },
+    "sources": {
+      "name": "create-arcane-crafts-0.1.0-sources.jar",
+      "sha256": "dbe7a8d3f2143508cc4207580e7614c36616806a7fc0dd54ef3feaf1b2fed4ba",
+      "sizeBytes": 472172,
+      "publishedReleaseAsset": false
+    }
+  },
+  "build": {
+    "tasks": [
+      "build",
+      "prototypeJar"
+    ],
+    "status": "PASS",
+    "jarChecks": 42,
+    "additionalSoundChecks": 288,
+    "invariants": {
+      "status": "PASS",
+      "scope": "headless contracts; game rendering and transactions require in-game acceptance",
+      "checks": {
+        "authoritativeClock": 5161,
+        "idleAndC2Return": 3360,
+        "revealEnvelope": 6360,
+        "presentationMonotonicityAndClearance": 3934,
+        "bookHoverAndNearEdgeTilt": 10787,
+        "quaternionContinuity": 18072,
+        "researchLottery": 220,
+        "soundTimeline": 180
+      }
+    }
+  },
+  "nativeClient": {
+    "prototype_tested": "40c1ff4da51f037439ceceed26bac3a490dcf1d38d0349acf58f82f652e938f8",
+    "production_core_equivalent": "c80c59f6c3d739513bbd21a982b8e3c1515a3ea2bb6a5494da2c9dde7bc10d32",
+    "input_method": "actual native MouseHandler GLFW button press/release callback, real isWindowActive=true; this is software native-input-path acceptance, NOT CUA physical clicks",
+    "read_only_observation": "temporary separate helper captured actual framebuffer screenshots and native BE/inventory/UI state; production has no automatic QA clicks",
+    "consecutive_book_upgrades": {
+      "status": "PASS",
+      "selected_native_slot": 1,
+      "spell": "irons_spellbooks:magic_missile",
+      "levels": [
+        1,
+        2,
+        3
+      ],
+      "unselected_firebolt_level": 1,
+      "liquid_mb": [
+        500,
+        400,
+        250
+      ],
+      "native_ticks_per_upgrade": 70,
+      "retained_on_chamber": true,
+      "first_return_taken_independently": true,
+      "rearm_and_selector_reopened_after_each_upgrade": true,
+      "processing_empty_hand_double_use_locked": true,
+      "final_double_use_returns_exactly_one_book_and_two_total_bottles": true,
+      "creative_hand_insertion": "creative retains held source stack by native convention; each chamber operation consumes its owned one-ink input",
+      "evidence": [
+        "native-middle-before.json",
+        "native-processing-locked.json",
+        "native-secondary-taken.json",
+        "native-second-ink-inserted.json",
+        "native-second-before-confirm.json",
+        "native-second-processing.json",
+        "native-second-secondary-taken.json",
+        "native-both-taken.json"
+      ]
+    },
+    "stable_fully_open_book": {
+      "status": "PASS",
+      "note": "An additional actual native-confirmed firebolt 1→2 upgrade was left on the chamber over 40 seconds; final picture shows full open pages, low 1.34 base, player-near edge down, visible native selection HUD.",
+      "image": "../final-book-fully-open-retained.png",
+      "state": "../final-book-fully-open-retained-state.json",
+      "held_open_after_completion_seconds": 40,
+      "book_on_chamber_has_completed_at_preserved": true
+    },
+    "jei": {
+      "status": "PASS",
+      "research_views": 32,
+      "divine_pearl_native_INPUT_research_matches": 4,
+      "all_32_focus_input_counts": 4,
+      "barriers": 0,
+      "native_focus_image": "../final-jei-divine-focus-index.png",
+      "native_category_image": "../final-jei-research-native.png",
+      "runtime_export": "../jei-verification.json"
+    },
+    "shaders": {
+      "status": "PASS",
+      "same_palette": "crimson legendary",
+      "on": "BSL_v10.1.8 + Clrwl_1.0.5.zip",
+      "off": "native Oculus setShadersEnabled(false)+reload",
+      "coverage": "one complete 161-server-tick presentation with BSL enabled and one with BSL disabled; both have 133 monotonic logical trace samples ending at 132, completed imprint 0.0; separate fixed logical110 frames show pixel particles and runes, no old octagonal radial halos.",
+      "on_fixed_110_image": "../final-bsl-on-crimson-fixed110.png",
+      "off_fixed_110_image": "../final-bsl-off-crimson-logical110.png",
+      "trace": "../final-research-native-trace.log",
+      "analysis": "../final-visual-trace-analysis.json",
+      "on_complete_minimum_model_y": 1.1819621543051315,
+      "off_complete_minimum_model_y": 1.1455345619494617,
+      "minimum_clearance_limit": 1.06,
+      "excluded_frame": "instance/screenshots/final-bsl-on-crimson-logical110-clean.png was captured during shader reload and is empty sky; NOT used as evidence."
+    },
+    "limitations": [
+      "No CUA Java surface binding was available, so no physical OS mouse click was claimed.",
+      "Native images reflect BSL and native renderer appearance; WebGL bloom is not claimed to match stock Minecraft pixel for pixel."
+    ]
+  },
+  "completeVisualCycles": [
+    {
+      "startTime": "22:33:22",
+      "endTime": "22:33:30",
+      "samples": 133,
+      "first": 0.164107334539757,
+      "last": 132.0,
+      "monotonic": true,
+      "completedImprintMax": 0.0,
+      "minimumModelY": 1.1819621543051315
+    },
+    {
+      "startTime": "22:35:57",
+      "endTime": "22:36:05",
+      "samples": 133,
+      "first": 0.47574183363351763,
+      "last": 132.0,
+      "monotonic": true,
+      "completedImprintMax": 0.0,
+      "minimumModelY": 1.1455345619494617
+    }
+  ],
+  "catalog": {
+    "status": "PASS",
+    "staticRecipes": 66,
+    "nativeRuleFamilies": 7,
+    "printing": 108,
+    "ascension": 1510,
+    "researchViews": 32,
+    "recyclingViews": 3366,
+    "itemIcons": 83,
+    "spellIcons": 111,
+    "bytes": 513182,
+    "sha256": "3f640fafae19867ac0c928f5edd48e263978c76ef33e8b05c5e937f91555d909",
+    "scope": "Source and actual JEI indexed-data coverage plus PNG integrity; browser/native client interaction verified separately.",
+    "expandedVisibleViews": 5090,
+    "hiddenGenericJsonRecipes": 2
+  },
+  "userChecklist": {
+    "categories": 14,
+    "checks": 180,
+    "allMarkedUntestedForUser": true
+  },
+  "limitations": [
+    "Native input was tested through actual GLFW callbacks on an active window, not physical CUA mouse clicks.",
+    "BSL and no-shader checks cover the recorded palette, GPU and pinned dependency versions, not every shader or transparent-material combination.",
+    "The 180-item checklist is an operation inventory; this report does not claim 180 manual passes.",
+    "Client and dedicated server must both update to interaction protocol 2."
+  ],
+  "privateEvidenceRoot": "testing/post-feedback-20261020 (ignored; game saves and dependency art are not published)",
+  "server": {
+    "status": "PASS",
+    "artifact": {
+      "prototype": "abd712526ed95bb3ac0006404a7e4371d01fd5568eebcccff5a601c444fd7ace",
+      "production": "c80c59f6c3d739513bbd21a982b8e3c1515a3ea2bb6a5494da2c9dde7bc10d32",
+      "commands": [
+        "arcane_chamber_test",
+        "arcane_research_test",
+        "arcane_recipe_network_test",
+        "arcane_factory_test"
+      ],
+      "scope": "isolated testing/server, no op grants; all four actual suites PASS; obsolete-test FAIL retained separately as historical evidence",
+      "factoryPrototype": "32737b29266810f935037e0f6fe2592ad94804e4db4c7c00946cc2e5b8aeebe2",
+      "factoryStatus": "PASS",
+      "factoryRunAt": "2026-10-20T22:44:53.280387",
+      "factoryChecks": {
+        "fixture": 13,
+        "chamber": 51,
+        "compat": 18,
+        "fluids": 20
+      },
+      "nativeSmithingMenu": "PASS: template, blaze burner and arcane anvil each consumed exactly once"
+    },
+    "chamber": {
+      "spell_config": {
+        "default_max": 10,
+        "fixture": "irons_spellbooks:firebolt",
+        "initial_max": 10,
+        "effective_max": 10
+      },
+      "ordinary_4_to_5_and_70_tick_manual_cycle": "PASS",
+      "bottle_and_nbt_preserved_without_runtime_template": "PASS",
+      "save_load_roundtrip": "PASS",
+      "ordinary_rejects_7_to_8_without_material_loss": "PASS",
+      "transcendent_7_to_8": "PASS",
+      "breakthrough_needs_cake_without_material_loss": "PASS",
+      "wrong_ink_without_material_loss": "PASS",
+      "empty_tank_cannot_process": "PASS",
+      "blocked_output_without_material_loss": "PASS",
+      "crafted_chamber_needs_no_runtime_template": "PASS",
+      "fuel_required": "PASS",
+      "native_basin_4_to_5_transaction": "PASS",
+      "single_tank_simulation_replacement_and_typed_drain": "PASS",
+      "idle_missing_material_and_under_250mb_zero_cost_red_70_tick_manual_success": "PASS",
+      "manual_transaction_restarts_when_fluid_cost_signature_changes": "PASS",
+      "blue_bucket_4_and_red_bucket_16_target_5_or_8_upgrades": "PASS",
+      "low_tier_1_to_4_costs_100_150_200_exact_boundaries_and_70_manual_ticks": "PASS",
+      "red_low_tier_costs_25_37_5_50_exact_and_70_manual_ticks": "PASS",
+      "blue_250_500_750_red_62_5_125_187_5_exact_boundaries": "PASS",
+      "essence_250mb_replacement_and_full_tank_queue_preservation": "PASS",
+      "legacy_seven_slot_energy_migration_idle_preservation_and_success_cost": "PASS",
+      "whole_bottles_buckets_same_type_capacity_and_foreign_replacement": "PASS",
+      "empty_bottle_bucket_full_short_stacked_offhand_red_and_creative_pickup": "PASS",
+      "essence_topoff_replacement_and_physically_full_tank_queue_preservation": "PASS",
+      "three_breakthroughs_cost_937_5mb_and_three_cakes": "PASS",
+      "manual_and_basin_cake_transactions_no_loss_on_failure": "PASS",
+      "fractional_credit_reload_partial_drain_replacement_and_paid_empty_tank_boundaries": "PASS",
+      "legacy_red_minimum_threshold_and_actual_quarter_price": "PASS",
+      "tank_replacement_discards_old_liquid_without_fourfold_exchange": "PASS",
+      "zero_invalid_simulated_oversized_and_repeated_pipe_replacement_contract": "PASS",
+      "dry_red_processing_credit_is_not_exchangeable_blue_liquid": "PASS",
+      "legacy_two_tank_separate_paid_balance_remains_compatible": "PASS",
+      "legacy_ascension_full_source_nbt_80ticks_and_reload_no_double_ink": "PASS",
+      "native_ascension_pre_inked_basin_preserves_existing_ink_and_full_result_nbt": "PASS",
+      "native_ascension_pre_inked_mode_cake_output_gates_and_quarter_price": "PASS",
+      "native_ascension_invalid_payload_recipe_step_and_progress_rejected_without_loss": "PASS",
+      "tiered_printing_native_level_one_rarities_wrong_short_and_exact_ink": "[RARE, UNCOMMON, COMMON, EPIC, LEGENDARY]",
+      "three_skins_mutually_exclusive_headpieces_full_nbt_and_items_before_headpieces": "PASS",
+      "creative_headpiece_transfer_and_return_conserve_exact_one_original": "PASS",
+      "legacy_dual_headpieces_render_one_and_return_both_safely_across_reload": "PASS",
+      "over_max_no_rod_fails_atomically_death_persists_and_native_burner_restores": "PASS",
+      "native_ce_i_128_range_exposed_rod_exact_one_real_damage_bolt": "PASS",
+      "covered_rod_rejected_and_native_range_red_upgrade_never_strikes": "PASS",
+      "actual_block_removal_returns_decorations": "PASS",
+      "empty_chamber_lit_unlit_left_click_survival_creative_native_tool_durability": "PASS",
+      "residual_fire_save_load_portable_empty_state_and_restore": "PASS",
+      "native_bolt_all_flashes_self_fire_cleanup_only_adjacent_fire_preserved": "PASS",
+      "interaction_rules": {
+        "insertion_and_payment": "PASS: template rejected; cap one; simulation; both orders; survival and creative",
+        "legacy_and_independent_extraction": "PASS: no truncation; safe old templates; per-display ownership; duplicate and reach rejection",
+        "book_selection": "PASS: selection; exact 24 tick result-to-input transfer; all returns; reload; two consecutive upgrades; slot upgrade; non-book unchanged",
+        "six_native_operations": {
+          "unique_spell_upgrade": "PASS",
+          "spell_imbue": "PASS",
+          "orb_upgrade": "PASS",
+          "shriving": "PASS",
+          "book_slot_upgrade": "PASS",
+          "affinity_bind": "PASS"
+        },
+        "status": "PASS"
+      },
+      "display_hit_rules": {
+        "native_above_block_and_independent_transfers": "PASS",
+        "two_display_roles_are_distinct": "PASS",
+        "occlusion_and_reach_authority": "PASS",
+        "native_book_selector_targeting": "PASS",
+        "completion_inertial_endpoints": "PASS: 16 transformed sprite corners; idle thin plane restored",
+        "status": "PASS"
+      },
+      "status": "PASS"
+    },
+    "research": {
+      "spell_config": {
+        "default_max": 10,
+        "fixture": "irons_spellbooks:firebolt",
+        "initial_max": 10,
+        "effective_max": 10
+      },
+      "arcane": {
+        "status": "PASS",
+        "pause_reload_at_tick": 90,
+        "physical_mb_paid_once": 500,
+        "guide_consumed_once": 1,
+        "late_reload_at_tick": 160,
+        "duration_ticks": 161,
+        "output_ownership": "one pending -> one result -> one extraction"
+      },
+      "crimson": {
+        "status": "PASS",
+        "pause_reload_at_tick": 90,
+        "physical_mb_paid_once": 500,
+        "guide_consumed_once": 1,
+        "late_reload_at_tick": 160,
+        "duration_ticks": 161,
+        "output_ownership": "one pending -> one result -> one extraction"
+      },
+      "legacy_paid_draw": {
+        "additional_payment": 0,
+        "status": "PASS",
+        "legacy_guide_count_preserved": 3
+      },
+      "status": "PASS"
+    },
+    "recipeNetwork": {
+      "loginPacketBytes": 413105,
+      "recipes": 3229,
+      "sequenceStepsCompared": 17,
+      "ownedRecipes": [
+        "arcane_industry:arcane_grindstone",
+        "arcane_industry:arcane_grindstone_drain",
+        "arcane_industry:arcane_hatch",
+        "arcane_industry:ascension_chamber",
+        "arcane_industry:ascension_template",
+        "arcane_industry:brew_arcane_solution",
+        "arcane_industry:brew_blood_solution",
+        "arcane_industry:cauldron_empty_crimson_solution_bottle",
+        "arcane_industry:cauldron_empty_crimson_solution_bucket",
+        "arcane_industry:cauldron_empty_solution_bottle",
+        "arcane_industry:cauldron_empty_solution_bucket",
+        "arcane_industry:cauldron_fill_crimson_solution_bottle",
+        "arcane_industry:cauldron_fill_crimson_solution_bucket",
+        "arcane_industry:cauldron_fill_solution_bottle",
+        "arcane_industry:cauldron_fill_solution_bucket",
+        "arcane_industry:compact_crimson_essence",
+        "arcane_industry:compat/crafting/crystallize_arcane_solution_bottle",
+        "arcane_industry:compat/crafting/crystallize_crimson_solution_bottle",
+        "arcane_industry:compat/create/compact_arcane_essence_block",
+        "arcane_industry:compat/create/compact_arcane_solution_essence",
+        "arcane_industry:compat/create/compact_crimson_essence_block",
+        "arcane_industry:compat/create/compact_crimson_solution_essence",
+        "arcane_industry:compat/create/crushing_arcane_essence_block",
+        "arcane_industry:compat/create/crushing_crimson_essence_block",
+        "arcane_industry:compat/create/mechanical_crystallize_arcane_solution_bottle",
+        "arcane_industry:compat/create/mechanical_crystallize_crimson_solution_bottle",
+        "arcane_industry:compat/create/mechanical_pack_arcane_essence",
+        "arcane_industry:compat/create/mechanical_pack_crimson_essence",
+        "arcane_industry:compat/create/mechanical_unpack_arcane_essence",
+        "arcane_industry:compat/create/mechanical_unpack_crimson_essence",
+        "arcane_industry:compat/create/milling_arcane_essence_block",
+        "arcane_industry:compat/create/milling_crimson_essence_block",
+        "arcane_industry:compat/irons_spellbooks/brew_crimson_essence_solution",
+        "arcane_industry:craft_arcane_solution_bottles",
+        "arcane_industry:craft_arcane_solution_bucket",
+        "arcane_industry:craft_blank_scroll",
+        "arcane_industry:craft_crimson_solution_bottle",
+        "arcane_industry:craft_crimson_solution_bottles",
+        "arcane_industry:craft_crimson_solution_bucket",
+        "arcane_industry:empty_crimson_solution_bottle",
+        "arcane_industry:empty_crimson_solution_bucket",
+        "arcane_industry:empty_solution_bottle",
+        "arcane_industry:empty_solution_bucket",
+        "arcane_industry:fill_crimson_solution_bottle",
+        "arcane_industry:fill_crimson_solution_bucket",
+        "arcane_industry:fill_solution_bottle",
+        "arcane_industry:fill_solution_bucket",
+        "arcane_industry:mana_supply_upgrade",
+        "arcane_industry:mix_arcane_solution",
+        "arcane_industry:mix_blood_solution",
+        "arcane_industry:mix_common_ink",
+        "arcane_industry:mix_crimson_essence_solution",
+        "arcane_industry:mix_crimson_solution",
+        "arcane_industry:mix_epic_ink",
+        "arcane_industry:mix_legendary_ink",
+        "arcane_industry:mix_rare_ink",
+        "arcane_industry:mix_uncommon_ink",
+        "arcane_industry:pack_arcane_essence",
+        "arcane_industry:pack_crimson_essence",
+        "arcane_industry:sequenced_assembly/ember_cake",
+        "arcane_industry:sequenced_assembly/printed_scroll",
+        "arcane_industry:sequenced_assembly/scroll_ascension",
+        "arcane_industry:unpack_arcane_essence",
+        "arcane_industry:unpack_crimson_essence"
+      ],
+      "directNativeInkFixtures": 5,
+      "emptyTag": "PASS",
+      "expandedTag": "PASS",
+      "foreignDirectFluid": "REJECTED",
+      "wrongAmount": "REJECTED",
+      "status": "PASS"
+    },
+    "factory": {
+      "fixture": {
+        "spell_config": {
+          "fixture": "irons_spellbooks:firebolt",
+          "initial_max": 10,
+          "effective_max": 10,
+          "default_max": 10
+        },
+        "generator_class": "net.minecraft.world.level.levelgen.FlatLevelSource",
+        "actual_superflat": true,
+        "actual_structures_disabled": true,
+        "update_supply_chest_present": true,
+        "test_chests_present": true,
+        "registered_addon_items": [
+          "arcane_industry:arcane_essence_block",
+          "arcane_industry:arcane_grindstone",
+          "arcane_industry:arcane_grindstone_drain",
+          "arcane_industry:arcane_hatch",
+          "arcane_industry:arcane_solution_bottle",
+          "arcane_industry:arcane_solution_bucket",
+          "arcane_industry:ascension_chamber",
+          "arcane_industry:ascension_template",
+          "arcane_industry:crimson_essence",
+          "arcane_industry:crimson_essence_block",
+          "arcane_industry:crimson_solution_bottle",
+          "arcane_industry:crimson_solution_bucket",
+          "arcane_industry:ember_cake",
+          "arcane_industry:ember_cake_base",
+          "arcane_industry:mana_supply_upgrade",
+          "arcane_industry:unfinished_ascension_scroll",
+          "arcane_industry:uninked_scroll"
+        ],
+        "missing_addon_items": [],
+        "all_addon_items_in_chests": true,
+        "ordinary_demo": {
+          "position": "-4, 1, 4",
+          "expected_target_rarity": "UNCOMMON",
+          "input_level": -1,
+          "output_level": 5,
+          "ink_item": "consumed",
+          "ink_matches_target_or_completed": true,
+          "status": "PASS"
+        },
+        "transcendent_demo": {
+          "position": "0, 1, 4",
+          "expected_target_rarity": "EPIC",
+          "input_level": -1,
+          "output_level": 8,
+          "ink_item": "consumed",
+          "ink_matches_target_or_completed": true,
+          "status": "PASS"
+        },
+        "basin_demo": {
+          "position": "4, 1, 4",
+          "expected_target_rarity": "UNCOMMON",
+          "input_level": 4,
+          "output_level": -1,
+          "matching_ink_mB": 750,
+          "status": "PASS"
+        },
+        "status": "PASS"
+      },
+      "chamber": {
+        "spell_config": {
+          "fixture": "irons_spellbooks:firebolt",
+          "initial_max": 10,
+          "effective_max": 10,
+          "default_max": 10
+        },
+        "ordinary_4_to_5_and_70_tick_manual_cycle": "PASS",
+        "bottle_and_nbt_preserved_without_runtime_template": "PASS",
+        "save_load_roundtrip": "PASS",
+        "ordinary_rejects_7_to_8_without_material_loss": "PASS",
+        "transcendent_7_to_8": "PASS",
+        "breakthrough_needs_cake_without_material_loss": "PASS",
+        "wrong_ink_without_material_loss": "PASS",
+        "empty_tank_cannot_process": "PASS",
+        "blocked_output_without_material_loss": "PASS",
+        "crafted_chamber_needs_no_runtime_template": "PASS",
+        "fuel_required": "PASS",
+        "native_basin_4_to_5_transaction": "PASS",
+        "single_tank_simulation_replacement_and_typed_drain": "PASS",
+        "idle_missing_material_and_under_250mb_zero_cost_red_70_tick_manual_success": "PASS",
+        "manual_transaction_restarts_when_fluid_cost_signature_changes": "PASS",
+        "blue_bucket_4_and_red_bucket_16_target_5_or_8_upgrades": "PASS",
+        "low_tier_1_to_4_costs_100_150_200_exact_boundaries_and_70_manual_ticks": "PASS",
+        "red_low_tier_costs_25_37_5_50_exact_and_70_manual_ticks": "PASS",
+        "blue_250_500_750_red_62_5_125_187_5_exact_boundaries": "PASS",
+        "essence_250mb_replacement_and_full_tank_queue_preservation": "PASS",
+        "legacy_seven_slot_energy_migration_idle_preservation_and_success_cost": "PASS",
+        "whole_bottles_buckets_same_type_capacity_and_foreign_replacement": "PASS",
+        "empty_bottle_bucket_full_short_stacked_offhand_red_and_creative_pickup": "PASS",
+        "essence_topoff_replacement_and_physically_full_tank_queue_preservation": "PASS",
+        "three_breakthroughs_cost_937_5mb_and_three_cakes": "PASS",
+        "manual_and_basin_cake_transactions_no_loss_on_failure": "PASS",
+        "fractional_credit_reload_partial_drain_replacement_and_paid_empty_tank_boundaries": "PASS",
+        "legacy_red_minimum_threshold_and_actual_quarter_price": "PASS",
+        "tank_replacement_discards_old_liquid_without_fourfold_exchange": "PASS",
+        "zero_invalid_simulated_oversized_and_repeated_pipe_replacement_contract": "PASS",
+        "dry_red_processing_credit_is_not_exchangeable_blue_liquid": "PASS",
+        "legacy_two_tank_separate_paid_balance_remains_compatible": "PASS",
+        "legacy_ascension_full_source_nbt_80ticks_and_reload_no_double_ink": "PASS",
+        "native_ascension_pre_inked_basin_preserves_existing_ink_and_full_result_nbt": "PASS",
+        "native_ascension_pre_inked_mode_cake_output_gates_and_quarter_price": "PASS",
+        "native_ascension_invalid_payload_recipe_step_and_progress_rejected_without_loss": "PASS",
+        "tiered_printing_native_level_one_rarities_wrong_short_and_exact_ink": "[RARE, UNCOMMON, COMMON, EPIC, LEGENDARY]",
+        "three_skins_mutually_exclusive_headpieces_full_nbt_and_items_before_headpieces": "PASS",
+        "creative_headpiece_transfer_and_return_conserve_exact_one_original": "PASS",
+        "legacy_dual_headpieces_render_one_and_return_both_safely_across_reload": "PASS",
+        "over_max_no_rod_fails_atomically_death_persists_and_native_burner_restores": "PASS",
+        "native_ce_i_128_range_exposed_rod_exact_one_real_damage_bolt": "PASS",
+        "covered_rod_rejected_and_native_range_red_upgrade_never_strikes": "PASS",
+        "actual_block_removal_returns_decorations": "PASS",
+        "empty_chamber_lit_unlit_left_click_survival_creative_native_tool_durability": "PASS",
+        "residual_fire_save_load_portable_empty_state_and_restore": "PASS",
+        "native_bolt_all_flashes_self_fire_cleanup_only_adjacent_fire_preserved": "PASS",
+        "interaction_rules": {
+          "insertion_and_payment": "PASS: template rejected; cap one; simulation; both orders; survival and creative",
+          "legacy_and_independent_extraction": "PASS: no truncation; safe old templates; per-display ownership; duplicate and reach rejection",
+          "book_selection": "PASS: selection; exact 24 tick result-to-input transfer; all returns; reload; two consecutive upgrades; slot upgrade; non-book unchanged",
+          "six_native_operations": {
+            "unique_spell_upgrade": "PASS",
+            "spell_imbue": "PASS",
+            "orb_upgrade": "PASS",
+            "shriving": "PASS",
+            "book_slot_upgrade": "PASS",
+            "affinity_bind": "PASS"
+          },
+          "status": "PASS"
+        },
+        "display_hit_rules": {
+          "native_above_block_and_independent_transfers": "PASS",
+          "two_display_roles_are_distinct": "PASS",
+          "occlusion_and_reach_authority": "PASS",
+          "native_book_selector_targeting": "PASS",
+          "completion_inertial_endpoints": "PASS: 16 transformed sprite corners; idle thin plane restored",
+          "status": "PASS"
+        },
+        "status": "PASS"
+      },
+      "compat": {
+        "level_and_capacity_boundaries": "PASS",
+        "native_level_one_rarity_distribution": {
+          "RARE": 27,
+          "UNCOMMON": 27,
+          "COMMON": 37,
+          "EPIC": 8,
+          "LEGENDARY": 11
+        },
+        "native_level_one_non_common_spells": [
+          "irons_spellbooks:acupuncture=RARE",
+          "irons_spellbooks:blood_needles=UNCOMMON",
+          "irons_spellbooks:blood_slash=RARE",
+          "irons_spellbooks:blood_step=UNCOMMON",
+          "irons_spellbooks:devour=UNCOMMON",
+          "irons_spellbooks:heartstop=RARE",
+          "irons_spellbooks:raise_dead=UNCOMMON",
+          "irons_spellbooks:wither_skull=UNCOMMON",
+          "irons_spellbooks:sacrifice=RARE",
+          "irons_spellbooks:counterspell=RARE",
+          "irons_spellbooks:evasion=EPIC",
+          "irons_spellbooks:magic_arrow=RARE",
+          "irons_spellbooks:starfall=UNCOMMON",
+          "irons_spellbooks:teleport=UNCOMMON",
+          "irons_spellbooks:summon_ender_chest=RARE",
+          "irons_spellbooks:recall=UNCOMMON",
+          "irons_spellbooks:portal=UNCOMMON",
+          "irons_spellbooks:echoing_strikes=RARE",
+          "irons_spellbooks:black_hole=LEGENDARY",
+          "irons_spellbooks:summon_swords=RARE",
+          "irons_spellbooks:arcane_shackle=RARE",
+          "irons_spellbooks:gravity_fissure=EPIC",
+          "irons_spellbooks:chain_creeper=UNCOMMON",
+          "irons_spellbooks:gust=UNCOMMON",
+          "irons_spellbooks:invisibility=RARE",
+          "irons_spellbooks:lob_creeper=UNCOMMON",
+          "irons_spellbooks:spectral_hammer=UNCOMMON",
+          "irons_spellbooks:summon_vex=RARE",
+          "irons_spellbooks:slow=EPIC",
+          "irons_spellbooks:arrow_volley=UNCOMMON",
+          "irons_spellbooks:wololo=LEGENDARY",
+          "irons_spellbooks:fang_swirl=EPIC",
+          "irons_spellbooks:scapegoat=RARE",
+          "irons_spellbooks:fireball=RARE",
+          "irons_spellbooks:magma_bomb=UNCOMMON",
+          "irons_spellbooks:scorch=UNCOMMON",
+          "irons_spellbooks:flaming_barrage=RARE",
+          "irons_spellbooks:fire_arrow=RARE",
+          "irons_spellbooks:raise_hell=LEGENDARY",
+          "irons_spellbooks:angel_wing=LEGENDARY",
+          "irons_spellbooks:greater_heal=RARE",
+          "irons_spellbooks:heal=UNCOMMON",
+          "irons_spellbooks:sunbeam=UNCOMMON",
+          "irons_spellbooks:haste=EPIC",
+          "irons_spellbooks:cleanse=EPIC",
+          "irons_spellbooks:frost_step=RARE",
+          "irons_spellbooks:ice_block=RARE",
+          "irons_spellbooks:summon_polar_bear=RARE",
+          "irons_spellbooks:ice_tomb=UNCOMMON",
+          "irons_spellbooks:snowball=UNCOMMON",
+          "irons_spellbooks:frostbite=EPIC",
+          "irons_spellbooks:blizzard=RARE",
+          "irons_spellbooks:ascension=RARE",
+          "irons_spellbooks:chain_lightning=UNCOMMON",
+          "irons_spellbooks:charge=RARE",
+          "irons_spellbooks:lightning_bolt=EPIC",
+          "irons_spellbooks:lightning_lance=UNCOMMON",
+          "irons_spellbooks:thunderstorm=RARE",
+          "irons_spellbooks:blight=RARE",
+          "irons_spellbooks:poison_splash=UNCOMMON",
+          "irons_spellbooks:root=UNCOMMON",
+          "irons_spellbooks:spider_aspect=RARE",
+          "irons_spellbooks:firefly_swarm=UNCOMMON",
+          "irons_spellbooks:earthquake=UNCOMMON",
+          "irons_spellbooks:stomp=UNCOMMON",
+          "irons_spellbooks:touch_dig=RARE",
+          "irons_spellbooks:abyssal_shroud=LEGENDARY",
+          "irons_spellbooks:sculk_tentacles=LEGENDARY",
+          "irons_spellbooks:sonic_boom=LEGENDARY",
+          "irons_spellbooks:planar_sight=LEGENDARY",
+          "irons_spellbooks:telekinesis=LEGENDARY",
+          "irons_spellbooks:eldritch_blast=LEGENDARY",
+          "irons_spellbooks:pocket_dimension=LEGENDARY"
+        ],
+        "registered_provider_blank_scroll_50mb_uninked_identity_and_level_reset": "PASS",
+        "real_printer_wrong_and_insufficient_fluid_no_loss": "PASS",
+        "real_printer_native_cycle_blank_scroll_50mb_uninked_output_and_template": "PASS",
+        "breakthrough": {
+          "native_max_1_3_5_10_sequences": [
+            {
+              "spell": "irons_spellbooks:counterspell",
+              "solution_costs_mB": [
+                62.5,
+                125.0,
+                187.5
+              ],
+              "ceil_mB_without_fractional_credit": [
+                63,
+                125,
+                188
+              ],
+              "max_plus_four_without_cake_and_without_super": "REJECTED",
+              "metadata_roundtrip_and_printing_gate": "PASS",
+              "native_max": 1,
+              "accepted_levels": [
+                2,
+                3,
+                4
+              ]
+            },
+            {
+              "spell": "irons_spellbooks:portal",
+              "solution_costs_mB": [
+                62.5,
+                125.0,
+                187.5
+              ],
+              "ceil_mB_without_fractional_credit": [
+                63,
+                125,
+                188
+              ],
+              "max_plus_four_without_cake_and_without_super": "REJECTED",
+              "metadata_roundtrip_and_printing_gate": "PASS",
+              "native_max": 3,
+              "accepted_levels": [
+                4,
+                5,
+                6
+              ]
+            },
+            {
+              "spell": "irons_spellbooks:teleport",
+              "solution_costs_mB": [
+                62.5,
+                125.0,
+                187.5
+              ],
+              "ceil_mB_without_fractional_credit": [
+                63,
+                125,
+                188
+              ],
+              "max_plus_four_without_cake_and_without_super": "REJECTED",
+              "metadata_roundtrip_and_printing_gate": "PASS",
+              "native_max": 5,
+              "accepted_levels": [
+                6,
+                7,
+                8
+              ]
+            },
+            {
+              "spell": "irons_spellbooks:firebolt",
+              "solution_costs_mB": [
+                250.0,
+                312.5,
+                375.0
+              ],
+              "ceil_mB_without_fractional_credit": [
+                250,
+                313,
+                375
+              ],
+              "max_plus_four_without_cake_and_without_super": "REJECTED",
+              "metadata_roundtrip_and_printing_gate": "PASS",
+              "native_max": 10,
+              "accepted_levels": [
+                11,
+                12,
+                13
+              ]
+            }
+          ],
+          "ordinary_routes_and_integer_boundary": "PASS",
+          "registered_tooltip_event_server_safe": "PASS",
+          "registered_spell_calculation_smoke": {
+            "spells": 111,
+            "native_negative_cast_time_results": [],
+            "scope": "mana/power/cast-time/effective-level/rarity/tooltip-statistics only; no actual casts",
+            "max_plus_1_2_3_checks": 333,
+            "status": "PASS"
+          },
+          "status": "PASS"
+        },
+        "native_anvil_low_level_upgrade_preserved": "PASS",
+        "native_anvil_upgrade_retains_printed_recycling_guard": "PASS",
+        "native_anvil_high_level_gate_and_no_input_loss": "PASS",
+        "native_anvil_breakthrough_gate_and_stale_output": "PASS: 16 levels",
+        "native_anvil_portal_low_levels_preserved": "PASS",
+        "native_anvil_equipment_function_preserved": "PASS",
+        "native_inscription_printed_provenance_preview_failure_and_real_take": "PASS",
+        "native_inscription_roundtrip_preserves_printed_and_wild_native_recycling": "PASS",
+        "native_writing_low_level_preserved": "PASS",
+        "native_writing_high_level_gate_and_stale_output": "PASS: 3 ink rarities",
+        "menu_test_actor": "Forge FakePlayer; actual server menu classes; no client GUI exercised"
+      },
+      "fluids": {
+        "custom_mixing_brewing_and_crafting_recipes_loaded": "PASS",
+        "paper_and_string_craft_one_empty_native_scroll_without_spell_or_remainders": "PASS",
+        "ascension_template_native_nine_slot_gold_amethyst_copper_blaze_upgrade_recipe": "PASS",
+        "chamber_native_smithing_consumes_template_burner_anvil_once": "PASS",
+        "mana_upgrade_native_nine_slot_andesite_corners_amethyst_sides_recipe": "PASS",
+        "all_five_native_ink_fluids_spout_bottle_and_drain_roundtrip": "PASS",
+        "uninked_scroll_native_spout_actual_level_one_ink_and_250mb_balance": "PASS",
+        "uninked_scroll_wrong_short_ink_bad_parameters_and_payload_no_loss": "PASS",
+        "solution_bottle_and_bucket_spout_drain_roundtrip": "PASS",
+        "crimson_bottle_and_bucket_spout_drain_roundtrip": "PASS",
+        "four_bottles_equal_bucket_crafting_and_empty_container_conservation": "PASS",
+        "ember_cake_native_four_step_assembly_progress_and_save_roundtrip": "PASS",
+        "ember_cake_egg_sugar_cinder_one_each_and_spout_1000mB_no_skip": "PASS",
+        "no_source_conversion_and_create_bottomless_allow_tag": "PASS",
+        "native_water_and_blood_brewing_with_pipe_extraction": "PASS",
+        "native_cauldron_bottle_bucket_roundtrip": "PASS",
+        "native_crimson_cauldron_bottle_bucket_roundtrip": "PASS",
+        "printed_and_upgraded_scrolls_use_original_native_random_recycling": "PASS",
+        "unprinted_wild_scroll_original_random_recycling_preserved": "PASS",
+        "status": "PASS"
+      },
+      "status": "PASS"
+    },
+    "testCorrection": "FactoryCompatTests had an obsolete printed-scroll recycling rejection that contradicted the already-maintained FluidRecipeTests and native Iron 3.16.3 behavior. Only the test was corrected; production SHA-256 did not change. Initial FAIL is retained in ignored local evidence."
+  },
+  "evidenceManifest": [
+    {
+      "path": "testing/post-feedback-20261020/final-book-fully-open-retained.png",
+      "sha256": "ca2fe403ea6f978dec4a5758d3311f833b47373369cccf1f51b986aaddcfa22d"
+    },
+    {
+      "path": "testing/post-feedback-20261020/final-book-fully-open-retained-state.json",
+      "sha256": "c65da7351f1210eba8cb266cb76a9d1064934ac355745435f33889088ee32f78"
+    },
+    {
+      "path": "testing/post-feedback-20261020/final-bsl-on-crimson-fixed110.png",
+      "sha256": "b2d52137b9aebef3f948d1cada2b64b18ac109740b09f3a76cb53297c856f1c8"
+    },
+    {
+      "path": "testing/post-feedback-20261020/final-bsl-off-crimson-logical110.png",
+      "sha256": "563df8508c77c8926b504e806e547f78bfee5de8bcd2e84281dbc25993167e2b"
+    },
+    {
+      "path": "testing/post-feedback-20261020/final-visual-trace-analysis.json",
+      "sha256": "6e7d94463d7fcee3b232c71bac6e58a6dddc8f599b204bfdb2258c5521d78ce3"
+    },
+    {
+      "path": "testing/post-feedback-20261020/final-native/report.json",
+      "sha256": "cf0d398d894f7e5981dbe1cb493787e524bd4902d3cd0958391c4bf558501d55"
+    },
+    {
+      "path": "testing/post-feedback-20261020/final-native/native-both-taken.json",
+      "sha256": "5cb54b55a0d90ba042b48280befaa861dc0d208c4124f1cc0f52dc94ea7711d6"
+    },
+    {
+      "path": "testing/post-feedback-20261020/final-jei-divine-focus-index.png",
+      "sha256": "86a399a37123fca66c00c20ee4dadabbcd90ac907035db0b5363ccffd4cb01f2"
+    }
+  ],
+  "productionInstallation": {
+    "sha256": "c80c59f6c3d739513bbd21a982b8e3c1515a3ea2bb6a5494da2c9dde7bc10d32",
+    "sameModFiles": [
+      "arcane-industry-0.1.0.jar"
+    ],
+    "qaHelperRemoved": true,
+    "qaEnabledMarkerRemoved": true,
+    "shadersEnabled": true,
+    "shaderPack": "BSL_v10.1.8 + Clrwl_1.0.5.zip",
+    "retainedAddons": [
+      "colorwheel-forge-1.3.0+mc1.20.1.jar",
+      "colorwheel_patcher-forge-1.0.5+mc1.20.1.jar",
+      "JadeAddons-1.20.1-Forge-5.5.1.jar",
+      "oculus-mc1.20.1-1.8.0.jar",
+      "jecharacters-1.20.1-forge-4.6.12.jar",
+      "embeddium-0.3.31+mc1.20.1.jar",
+      "Jade-1.20.1-Forge-11.13.3.jar"
+    ],
+    "isolatedServerStopped": true,
+    "worldLoaded": true,
+    "integratedServer": true,
+    "presentationTraceEnabled": false,
+    "serverShortcutAbsent": true,
+    "status": "PASS"
+  }
+}

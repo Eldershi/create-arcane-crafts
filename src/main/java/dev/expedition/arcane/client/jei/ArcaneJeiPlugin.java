@@ -46,6 +46,9 @@ public final class ArcaneJeiPlugin implements IModPlugin {
     static final ResourceLocation TEMPLATE_RECIPE_ID = ArcaneRecipeDisplays.id("ascension_template");
     static final ResourceLocation MANA_UPGRADE_RECIPE_ID = ArcaneRecipeDisplays.id("mana_supply_upgrade");
     private static IJeiRuntime currentRuntime;
+    private static boolean researchRegistered;
+    private boolean runtimeListening;
+    private int researchWait;
     private ArcaneRecipeDisplays.Snapshot snapshot;
 
     @Override public ResourceLocation getPluginUid() { return ArcaneRecipeDisplays.id("jei_plugin"); }
@@ -84,7 +87,6 @@ public final class ArcaneJeiPlugin implements IModPlugin {
         var displays = snapshot();
         registration.addRecipes(IMPRINTING, displays.printing());
         registration.addRecipes(INKING, displays.printing());
-        registration.addRecipes(RESEARCH, RandomResearchCategory.views());
         registration.addRecipes(RECYCLING, ArcaneRecyclingCategory.views());
         var level = Minecraft.getInstance().level;
         var printingAssemblies = level == null ? List.<SequencedAssemblyRecipe>of()
@@ -95,10 +97,12 @@ public final class ArcaneJeiPlugin implements IModPlugin {
         registration.addRecipes(ASCENSION, ascensionAssemblies);
         registration.addItemStackInfo(new ItemStack(ArcaneContent.CHAMBER.get()),
                 Component.literal("动力加工：卷轴与 250 mB 对应墨水一起加入工作盆，上方动力搅拌器搅拌，下方放置升华室。"),
-                Component.literal("也可直接向升华室放入物品与材料，手动加工 70 tick（3.5 秒），无需工作盆；升华模板保留。"),
+                Component.literal("升华模板仅用于锻造升华室：模板＋烈焰人燃烧室＋奥术铁砧。开工无需另装模板。"),
+                Component.literal("也可直接放入相互匹配的主、副物品，各限1个；普通手动工艺70 tick（3.5秒）。"),
                 Component.literal("手动支持卷轴及书内选定法术升级、固有法术升级、法术注入、法球强化、法术书扩槽、亲和戒指绑定与忏悔石净化。"),
-                Component.literal("法术书在 5×5 范围内翻开，指向升华室后滚轮选择法术，右键确认合书，再放入墨水瓶；空手右键优先取物。"),
-                Component.literal("成功出成品时扣原液与所需的余烬蛋糕；墨水瓶的空瓶随取物返还。"),
+                Component.literal("法术书在 5×5 范围内翻开，指向后滚轮选术、中键确认，再放入墨水瓶；空手右键取下所指物品。空书会提示无法术。"),
+                Component.literal("随机研习：消耗1张空白卷轴、1个学派引导物与500 mB原液，161 tick（8.05秒）。"),
+                Component.literal("成功出成品时扣原液与所需的余烬蛋糕；空瓶作为副产物，可单独指向取回。"),
                 Component.literal("猩红原液使其进入突破状态；超过法术原生上限的超越升级还需余烬蛋糕与露天避雷针。"),
                 Component.literal("烈焰人被雷击后留下带余火的空笼；余火仅用于装饰，不能加工。"),
                 Component.literal("空手左键或用铲子右键可扑灭余火；打火石可重新点燃空笼。"),
@@ -147,6 +151,13 @@ public final class ArcaneJeiPlugin implements IModPlugin {
 
     @Override public void onRuntimeAvailable(IJeiRuntime runtime) {
         currentRuntime = runtime;
+        researchRegistered = false;
+        researchWait = 0;
+        if (!runtimeListening) {
+            net.minecraftforge.common.MinecraftForge.EVENT_BUS.register(this);
+            runtimeListening = true;
+        }
+        registerResearchAfterTags();
         // This server recipe computes its result from the incoming NBT. Create's generic
         // category cannot show that and otherwise presents an incorrect empty-scroll result.
         // Hide only its JEI entry; our per-spell inking entries retain the real level-one output.
@@ -163,6 +174,35 @@ public final class ArcaneJeiPlugin implements IModPlugin {
                         || recipe.getId().equals(NativeAssemblyDisplays.ASCENSION_ID)).toList();
         runtime.getRecipeManager().hideRecipes(NATIVE_ASSEMBLY, genericAssemblies);
         DevelopmentJeiHooks.write(runtime, snapshot(), hidden, genericAssemblies.size());
+    }
+
+    @Override public void onRuntimeUnavailable() {
+        currentRuntime = null;
+        researchRegistered = false;
+        if (runtimeListening) net.minecraftforge.common.MinecraftForge.EVENT_BUS.unregister(this);
+        runtimeListening = false;
+        snapshot = null;
+    }
+
+    @net.minecraftforge.eventbus.api.SubscribeEvent
+    public void afterLogin(net.minecraftforge.event.TickEvent.ClientTickEvent event) {
+        if (event.phase == net.minecraftforge.event.TickEvent.Phase.END && !researchRegistered
+                && ++researchWait % 10 == 0) registerResearchAfterTags();
+    }
+
+    static boolean researchReady() { return currentRuntime != null && researchRegistered; }
+
+    private void registerResearchAfterTags() {
+        if (currentRuntime == null || researchRegistered || Minecraft.getInstance().level == null) return;
+        // JEI indexes ingredients when a recipe is added. Building a tag Ingredient before
+        // the login tag packet arrives permanently indexes Forge's BARRIER placeholder.
+        var all = RandomResearchCategory.views();
+        var ready = all.stream().filter(view -> java.util.Arrays.stream(
+                net.minecraft.world.item.crafting.Ingredient.of(view.pool().school().getFocus()).getItems())
+                .anyMatch(item -> !item.isEmpty() && !item.is(net.minecraft.world.item.Items.BARRIER))).toList();
+        if (!all.isEmpty() && ready.isEmpty() && researchWait < 400) return;
+        currentRuntime.getRecipeManager().addRecipes(RESEARCH, ready);
+        researchRegistered = true;
     }
 
     /** A narrow client-thread entry point used only by the prototype review request hook. */
@@ -208,8 +248,4 @@ public final class ArcaneJeiPlugin implements IModPlugin {
         return true;
     }
 
-    @Override public void onRuntimeUnavailable() {
-        currentRuntime = null;
-        snapshot = null;
-    }
 }

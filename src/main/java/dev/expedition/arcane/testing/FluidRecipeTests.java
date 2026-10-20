@@ -75,6 +75,7 @@ public final class FluidRecipeTests {
                 new ItemStack(copperSheet), new ItemStack(blazeTemplate), new ItemStack(copperSheet),
                 new ItemStack(goldSheet), new ItemStack(copperSheet), new ItemStack(goldSheet));
         results.put("ascension_template_native_nine_slot_gold_amethyst_copper_blaze_upgrade_recipe", "PASS");
+        runChamberSmithing(level, results);
         var andesiteAlloy = ForgeRegistries.ITEMS.getValue(new ResourceLocation("create", "andesite_alloy"));
         var blankRune = ForgeRegistries.ITEMS.getValue(new ResourceLocation("irons_spellbooks", "blank_rune"));
         var upgradeBase = ForgeRegistries.ITEMS.getValue(new ResourceLocation("sophisticatedbackpacks", "upgrade_base"));
@@ -169,6 +170,27 @@ public final class FluidRecipeTests {
         }
         results.put("status", "PASS");
         return results;
+    }
+
+    private static void runChamberSmithing(ServerLevel level, Map<String, Object> results) {
+        var loaded = level.getRecipeManager().byKey(id("ascension_chamber")).orElseThrow();
+        require(loaded instanceof net.minecraft.world.item.crafting.SmithingTransformRecipe,
+                "chamber construction uses native smithing, like the CEI blaze enchanter");
+        var actor = net.minecraftforge.common.util.FakePlayerFactory.get(level,
+                new com.mojang.authlib.GameProfile(java.util.UUID.fromString("12308bf3-5e66-45c6-98f8-a24114d8a5b2"), "ArcaneSmithingTest"));
+        var menu = new net.minecraft.world.inventory.SmithingMenu(0,
+                new net.minecraft.world.entity.player.Inventory(actor));
+        menu.getSlot(0).set(new ItemStack(ArcaneContent.TEMPLATE.get(), 2));
+        menu.getSlot(1).set(new ItemStack(ForgeRegistries.ITEMS.getValue(new ResourceLocation("create", "blaze_burner")), 2));
+        menu.getSlot(2).set(new ItemStack(ForgeRegistries.ITEMS.getValue(new ResourceLocation("irons_spellbooks", "arcane_anvil")), 2));
+        menu.createResult();
+        require(menu.getSlot(3).getItem().is(ArcaneContent.CHAMBER.get().asItem()) && menu.getSlot(3).getItem().getCount() == 1,
+                "native smithing menu produces exactly one chamber");
+        ItemStack result = menu.getSlot(3).remove(1);
+        menu.getSlot(3).onTake(actor, result);
+        for (int i = 0; i < 3; i++) require(menu.getSlot(i).getItem().getCount() == 1,
+                "native smithing consumes one template, burner and anvil, slot " + i);
+        results.put("chamber_native_smithing_consumes_template_burner_anvil_once", "PASS");
     }
 
     private static void roundTrip(ServerLevel level, FluidStack fluid, ItemStack empty, ItemStack expected) {

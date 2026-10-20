@@ -9,6 +9,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.registries.ForgeRegistries;
+import org.joml.Vector3f;
 
 /** The native BookModel hinge layout, fitted with each spell book's original UVs. */
 final class AnimatedSpellBook {
@@ -16,18 +17,57 @@ final class AnimatedSpellBook {
         return !stack.isEmpty() && AnimatedSpellBookMeshes.books().containsKey(ForgeRegistries.ITEMS.getKey(stack.getItem()));
     }
 
+    /** Actual articulated vertices, including decorations, in the item's parent frame. */
+    double minimumY(ItemStack stack, float open, float page1, float page2, PoseStack parent) {
+        var book = AnimatedSpellBookMeshes.books().get(ForgeRegistries.ITEMS.getKey(stack.getItem()));
+        if (book == null) return -.4;
+        double lowest = Double.POSITIVE_INFINITY;
+        Vector3f point = new Vector3f();
+        for (var part : book.parts) {
+            if (part.name.startsWith("flip_page") && open <= .025F) continue;
+            parent.pushPose();
+            articulate(book, part.name, open, page1, page2, parent);
+            for (var mesh : part.meshes) for (int i = 0; i < mesh.p.length; i += 3) {
+                point.set(mesh.p[i], mesh.p[i + 1], mesh.p[i + 2]);
+                parent.last().pose().transformPosition(point);
+                lowest = Math.min(lowest, point.y);
+            }
+            parent.popPose();
+        }
+        return Double.isFinite(lowest) ? lowest : -.4;
+    }
+
     void render(ItemStack stack, float open, float page1, float page2, PoseStack pose,
                 MultiBufferSource buffers, int light, int overlay) {
         var book = AnimatedSpellBookMeshes.books().get(ForgeRegistries.ITEMS.getKey(stack.getItem()));
         if (book == null) return;
         VertexConsumer buffer = buffers.getBuffer(RenderType.entityCutoutNoCull(new ResourceLocation(book.texture)));
-        float angle = 1.25F * Mth.clamp(open, 0, 1);
-        float reach = book.decor ? .38F : .30F;
         for (var part : book.parts) {
             String name = part.name;
             if (name.startsWith("flip_page") && open <= .025F) continue;
             pose.pushPose();
-            switch (name) {
+            articulate(book, name, open, page1, page2, pose);
+            for (var mesh : part.meshes) {
+                // Native entity render types consume quads; duplicate each triangle's last vertex.
+                for (int base = 0; base < mesh.p.length / 3; base += 3) {
+                    for (int corner : new int[]{0, 1, 2, 2}) {
+                        int i = base + corner;
+                        buffer.vertex(pose.last().pose(), mesh.p[i * 3], mesh.p[i * 3 + 1], mesh.p[i * 3 + 2])
+                                .color(255, 255, 255, 255).uv(mesh.uv[i * 2], mesh.uv[i * 2 + 1])
+                                .overlayCoords(overlay).uv2(light)
+                                .normal(pose.last().normal(), mesh.n[i * 3], mesh.n[i * 3 + 1], mesh.n[i * 3 + 2]).endVertex();
+                    }
+                }
+            }
+            pose.popPose();
+        }
+    }
+
+    private static void articulate(BookMeshGeometry.Definition book, String name, float open,
+                                   float page1, float page2, PoseStack pose) {
+        float angle = 1.25F * Mth.clamp(open, 0, 1);
+        float reach = book.decor ? .38F : .30F;
+        switch (name) {
                 case "left_lid" -> { pose.translate(0, 0, -book.thickness / 16); pose.mulPose(Axis.YP.rotation(Mth.PI + angle)); }
                 case "right_lid" -> { pose.translate(0, 0, book.thickness / 16); pose.mulPose(Axis.YP.rotation(-angle)); }
                 case "seam" -> {
@@ -47,20 +87,6 @@ final class AnimatedSpellBook {
                     };
                     pose.mulPose(Axis.YP.rotation(yaw));
                 }
-            }
-            for (var mesh : part.meshes) {
-                // Native entity render types consume quads; duplicate each triangle's last vertex.
-                for (int base = 0; base < mesh.p.length / 3; base += 3) {
-                    for (int corner : new int[]{0, 1, 2, 2}) {
-                        int i = base + corner;
-                        buffer.vertex(pose.last().pose(), mesh.p[i * 3], mesh.p[i * 3 + 1], mesh.p[i * 3 + 2])
-                                .color(255, 255, 255, 255).uv(mesh.uv[i * 2], mesh.uv[i * 2 + 1])
-                                .overlayCoords(overlay).uv2(light)
-                                .normal(pose.last().normal(), mesh.n[i * 3], mesh.n[i * 3 + 1], mesh.n[i * 3 + 2]).endVertex();
-                    }
-                }
-            }
-            pose.popPose();
         }
     }
 }

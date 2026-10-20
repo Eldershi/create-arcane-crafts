@@ -12,7 +12,9 @@ import com.mojang.math.Axis;
 import dev.expedition.arcane.ArcaneIndustry;
 import dev.expedition.arcane.chamber.AscensionChamberBlock;
 import dev.expedition.arcane.chamber.AscensionChamberBlockEntity;
+import dev.expedition.arcane.chamber.ChamberDisplayHit;
 import dev.expedition.arcane.chamber.ManualUpgradeRecipes;
+import io.redspace.ironsspellbooks.api.item.ISpellbook;
 import net.createmod.catnip.animation.LerpedFloat;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.geom.ModelLayerLocation;
@@ -22,12 +24,18 @@ import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
 import net.minecraft.client.renderer.entity.ItemRenderer;
+import net.minecraft.client.resources.model.BakedModel;
+import net.minecraft.core.Direction;
 import net.minecraft.util.Mth;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import org.joml.Quaternionf;
+import org.joml.Vector3f;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.WeakHashMap;
 
@@ -43,6 +51,7 @@ public final class AscensionChamberRenderer implements BlockEntityRenderer<Ascen
     private final Map<AscensionChamberBlockEntity, BasinPose> basinPoses = new WeakHashMap<>();
     private final Map<AscensionChamberBlockEntity, ResearchRig> researchRigs = new WeakHashMap<>();
     private final Map<AscensionChamberBlockEntity, Quaternionf[]> completionTargets = new WeakHashMap<>();
+    private final Map<BakedModel, List<Vector3f>> fixedBounds = new WeakHashMap<>();
 
     public AscensionChamberRenderer(BlockEntityRendererProvider.Context context) {
         itemRenderer = context.getItemRenderer();
@@ -145,8 +154,8 @@ public final class AscensionChamberRenderer implements BlockEntityRenderer<Ascen
         }
         researchRigs.remove(chamber);
         ItemStack primary = chamber.getManualPrimary();
-        if (primary.isEmpty()) return;
         ItemStack secondary = chamber.getManualSecondary();
+        if (primary.isEmpty() && secondary.isEmpty()) return;
         boolean partner = !secondary.isEmpty();
         boolean working = chamber.isManualProcessing();
         boolean done = chamber.getManualCompletedAt() >= 0;
@@ -154,7 +163,8 @@ public final class AscensionChamberRenderer implements BlockEntityRenderer<Ascen
                 : done ? ChamberManualClient.WORK_SECONDS + Math.max(0, (now - chamber.getManualCompletedAt()) / 20) : 0;
         double doneAge = done ? Math.max(0, (now - chamber.getManualCompletedAt()) / 20) : 0;
         boolean operation = !ManualUpgradeRecipes.BOOK_SPELL_UPGRADE.equals(chamber.getManualOperation());
-        var motion = ChamberItemMotion.pose(done ? doneAge : elapsed, now / 20, done, operation);
+        boolean primaryBook = primary.getItem() instanceof ISpellbook;
+        var motion = ChamberItemMotion.pose(done ? doneAge : elapsed, now / 20, done, operation, primaryBook);
         if (!done) completionTargets.remove(chamber);
         float yaw = 0;
         var player = Minecraft.getInstance().player;
@@ -162,19 +172,19 @@ public final class AscensionChamberRenderer implements BlockEntityRenderer<Ascen
                 player.getZ() - chamber.getBlockPos().getZ() - .5);
         var bookPose = presentation.sample(now);
         boolean isBook = books.supports(primary);
-        double y = working || done ? motion.vertical().y() : 1.12
-                - .04 * ChamberManualClient.ease(bookPose.open()) - bookPose.impact() * .008
-                + ChamberItemMotion.idle(now / 20).y();
+        double y = working || done ? motion.vertical().y() : ChamberItemMotion.idleHeight(now / 20, false, primaryBook);
         // Keep native two-item spacing until consumption; only a two-to-one result recentres.
-        double horizontal = partner ? -.40 : done && presentation.hadPartner
-                ? -.40 * (1 - ChamberManualClient.ease(doneAge / .85)) : 0;
-        renderManualItem(primary, isBook, horizontal, y, yaw, motion, working || done, 0,
+        double horizontal = partner ? -ChamberItemMotion.SLOT_HORIZONTAL : done
+                && !chamber.getManualOperation().isEmpty()
+                ? -ChamberItemMotion.SLOT_HORIZONTAL * (1 - ChamberManualClient.ease(doneAge / .85)) : 0;
+        if (!primary.isEmpty()) renderManualItem(primary, isBook, horizontal, y, yaw, motion, working || done, 0,
                 bookPose, pose, buffers, light, overlay, chamber);
         if (partner) {
-            double secondaryY = working ? ChamberItemMotion.processing(elapsed, operation, true).y()
-                    : done ? ChamberItemMotion.completed(doneAge, now / 20, operation, true).y()
-                    : 1.12 + ChamberItemMotion.idle(now / 20, ChamberItemMotion.SECONDARY_PHASE).y();
-            renderManualItem(secondary, books.supports(secondary), .40, secondaryY, yaw, motion,
+            boolean secondaryBook = secondary.getItem() instanceof ISpellbook;
+            double secondaryY = working ? ChamberItemMotion.processing(elapsed, now / 20, operation, true, secondaryBook).y()
+                    : done ? ChamberItemMotion.completed(doneAge, now / 20, operation, true, secondaryBook).y()
+                    : ChamberItemMotion.idleHeight(now / 20, true, secondaryBook);
+            renderManualItem(secondary, books.supports(secondary), ChamberItemMotion.SLOT_HORIZONTAL, secondaryY, yaw, motion,
                     working || done, 1, bookPose, pose, buffers, light, overlay, chamber);
         }
         if (working) {
@@ -189,17 +199,13 @@ public final class AscensionChamberRenderer implements BlockEntityRenderer<Ascen
                                   ChamberItemMotion.Pose motion, boolean moving, int index, ChamberManualClient.Pose bookPose,
                                   PoseStack pose, MultiBufferSource buffers, int light, int overlay,
                                   AscensionChamberBlockEntity chamber) {
-        pose.pushPose();
-        pose.translate(.5 + Math.cos(yaw) * horizontal, y, .5 - Math.sin(yaw) * horizontal);
+        Quaternionf orientation = new Quaternionf();
         if (moving && book && !motion.settled()) {
             float turn = (float) (motion.angular().y() + index * Math.PI);
-            pose.mulPose(Axis.XP.rotation(turn));
-            pose.mulPose(Axis.ZP.rotation(turn));
+            orientation.mul(Axis.XP.rotation(turn)).mul(Axis.ZP.rotation(turn));
         }
         if (book) {
-            pose.mulPose(Axis.YP.rotation(yaw + Mth.HALF_PI));
-            pose.mulPose(Axis.ZP.rotationDegrees(100 + bookPose.impact() * .7F));
-            books.render(stack, bookPose.open(), bookPose.page1(), bookPose.page2(), pose, buffers, light, overlay);
+            orientation.mul(joml(ChamberItemMotion.bookOrientation(yaw, bookPose.open(), bookPose.impact())));
         } else {
             Quaternionf camera = new Quaternionf(Minecraft.getInstance().gameRenderer.getMainCamera().rotation());
             if (moving) {
@@ -210,14 +216,62 @@ public final class AscensionChamberRenderer implements BlockEntityRenderer<Ascen
                     else target = target.hemisphere(quaternion(targets[index]));
                     targets[index] = joml(target);
                 }
-                pose.mulPose(joml(ChamberItemMotion.itemQuaternion(motion, index, target)));
-            } else pose.mulPose(camera);
-            float scale = itemScale(stack);
+                orientation = joml(ChamberItemMotion.itemQuaternion(motion, index, target));
+            } else orientation = camera;
+        }
+        // Use the actual posed mesh, not just its centre, to keep open covers,
+        // decoration and obliquely viewed sprites above the cage and the head.
+        PoseStack local = new PoseStack();
+        local.mulPose(orientation);
+        double lowest = book ? books.minimumY(stack, bookPose.open(), bookPose.page1(), bookPose.page2(), local)
+                : minimumItemY(stack, orientation, ChamberDisplayHit.itemScale(stack), chamber);
+        double safeY = ChamberItemMotion.clearHeight(y, lowest);
+        if (Boolean.getBoolean("arcane.presentation.trace") && safeY > y + .0001) {
+            com.mojang.logging.LogUtils.getLogger().debug("Chamber mesh clearance at {} slot {} requested {} safe {} meshMin {}",
+                    chamber.getBlockPos(), index, y, safeY, lowest);
+        }
+        pose.pushPose();
+        pose.translate(.5 + Math.cos(yaw) * horizontal, safeY, .5 - Math.sin(yaw) * horizontal);
+        pose.mulPose(orientation);
+        if (book) books.render(stack, bookPose.open(), bookPose.page1(), bookPose.page2(), pose, buffers, light, overlay);
+        else {
+            float scale = ChamberDisplayHit.itemScale(stack);
             pose.scale(scale, scale, scale);
             itemRenderer.renderStatic(stack, ItemDisplayContext.FIXED, light, overlay, pose, buffers,
                     chamber.getLevel(), chamber.getBlockPos().hashCode() + index);
         }
         pose.popPose();
+    }
+
+    private double minimumItemY(ItemStack stack, Quaternionf orientation, float scale,
+                                AscensionChamberBlockEntity chamber) {
+        BakedModel model = itemRenderer.getModel(stack, chamber.getLevel(), Minecraft.getInstance().player, 0);
+        List<Vector3f> points = fixedBounds.computeIfAbsent(model, source -> {
+            PoseStack transformed = new PoseStack();
+            BakedModel shown = source.applyTransform(ItemDisplayContext.FIXED, transformed, false);
+            transformed.translate(-.5, -.5, -.5);
+            List<Vector3f> result = new ArrayList<>();
+            RandomSource random = RandomSource.create(42);
+            for (int direction = 0; direction <= Direction.values().length; direction++) {
+                random.setSeed(42);
+                for (var quad : shown.getQuads(null, direction == Direction.values().length ? null
+                        : Direction.values()[direction], random)) {
+                    int[] data = quad.getVertices();
+                    int stride = data.length / 4;
+                    for (int corner = 0; corner < 4; corner++) {
+                        int i = corner * stride;
+                        Vector3f point = new Vector3f(Float.intBitsToFloat(data[i]),
+                                Float.intBitsToFloat(data[i + 1]), Float.intBitsToFloat(data[i + 2]));
+                        transformed.last().pose().transformPosition(point);
+                        result.add(point);
+                    }
+                }
+            }
+            return List.copyOf(result);
+        });
+        double minimum = Double.POSITIVE_INFINITY;
+        for (Vector3f source : points) minimum = Math.min(minimum, new Vector3f(source).mul(scale).rotate(orientation).y);
+        return Double.isFinite(minimum) ? minimum : -.4;
     }
 
     private static double researchTick(AscensionChamberBlockEntity chamber, double now) {
@@ -259,12 +313,6 @@ public final class AscensionChamberRenderer implements BlockEntityRenderer<Ascen
     }
     private static Quaternionf joml(ScrollRevealMotion.Quaternion value) {
         return new Quaternionf((float) value.x(), (float) value.y(), (float) value.z(), (float) value.w());
-    }
-
-    private static float itemScale(ItemStack stack) {
-        var id = net.minecraftforge.registries.ForgeRegistries.ITEMS.getKey(stack.getItem());
-        String path = id == null ? "" : id.getPath();
-        return path.contains("orb") || path.contains("shriving") || path.contains("slot") || path.contains("upgrade_token") ? .48F : .66F;
     }
 
 }

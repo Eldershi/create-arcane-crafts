@@ -3,6 +3,7 @@ package dev.expedition.arcane.chamber;
 import dev.expedition.arcane.ArcaneContent;
 import dev.expedition.arcane.CrimsonContent;
 import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
 import net.minecraft.util.StringRepresentable;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
@@ -83,7 +84,21 @@ public class AscensionChamberBlock extends BaseEntityBlock {
             return InteractionResult.CONSUME;
         }
         if (held.isEmpty()) {
-            if (chamber.isManualProcessing() || chamber.takeManualOutputs(player)) return InteractionResult.CONSUME;
+            if (chamber.isManualProcessing()) {
+                player.displayClientMessage(Component.translatable("gui.arcane_industry.chamber.processing"), true);
+                return InteractionResult.CONSUME;
+            }
+            if (!chamber.isBasinMode() && (!chamber.getManualPrimary().isEmpty() || !chamber.getManualSecondary().isEmpty())) {
+                // The client normally sends the floating-model packet because its geometry extends
+                // above this block. Keep the native block path identical and never fall through to
+                // sequential extraction of a different slot or to the off-hand's implicit fallback.
+                if (hand == InteractionHand.MAIN_HAND && player.getMainHandItem().isEmpty()) {
+                    ChamberDisplayHit.Target aimed = ChamberDisplayHit.find(player, 1);
+                    if (aimed != null && aimed.chamber() == chamber) chamber.takeDisplayedManualItem(player, aimed.role());
+                    else player.displayClientMessage(Component.translatable("gui.arcane_industry.chamber.aim_to_take"), true);
+                }
+                return InteractionResult.CONSUME;
+            }
             ItemStack extracted = chamber.extractForPlayer(player.isShiftKeyDown());
             if (!extracted.isEmpty()) {
                 ItemHandlerHelper.giveItemToPlayer(player, extracted);

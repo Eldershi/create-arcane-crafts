@@ -23,6 +23,8 @@ public final class VerifyReleaseInvariants {
         clock();
         idleAndReturn();
         reveal();
+        presentationMonotonicityAndClearance();
+        lowerBookPose();
         quaternions();
         lottery();
         group = "soundTimeline";
@@ -70,10 +72,10 @@ public final class VerifyReleaseInvariants {
                 var value = ChamberItemMotion.idle(t, phase);
                 var before = ChamberItemMotion.idle(t - h, phase);
                 var after = ChamberItemMotion.idle(t + h, phase);
-                check(Math.abs(value.y()) <= .00800000001, "idle stays within eight milliblocks");
-                close(value.y(), ChamberItemMotion.idle(t + 4.8, phase).y(), 2e-16, "idle period");
-                close((after.y() - before.y()) / (2 * h), value.vy(), 4e-11, "analytic idle velocity");
-                close((after.vy() - before.vy()) / (2 * h), value.ay(), 5e-11, "analytic idle acceleration");
+                check(Math.abs(value.y()) <= ChamberItemMotion.IDLE_AMPLITUDE + 1e-11, "idle stays in the visible hover envelope");
+                close(value.y(), ChamberItemMotion.idle(t + ChamberItemMotion.IDLE_PERIOD_SECONDS, phase).y(), 2e-16, "idle period");
+                close((after.y() - before.y()) / (2 * h), value.vy(), 2e-10, "analytic idle velocity");
+                close((after.vy() - before.vy()) / (2 * h), value.ay(), 3e-10, "analytic idle acceleration");
             }
         }
         for (boolean operation : new boolean[]{false, true}) {
@@ -82,7 +84,7 @@ public final class VerifyReleaseInvariants {
                 var start = ChamberItemMotion.completed(0, 13.25, operation, secondary);
                 same(start, work, 2e-14, "completion matches all three work endpoint derivatives");
                 double endTime = 13.25 + 1.2;
-                var idle = ChamberItemMotion.idle(endTime, secondary ? 1.1 : 0).offset(1.12);
+                var idle = ChamberItemMotion.idle(endTime, secondary ? 1.1 : 0).offset(ChamberItemMotion.BASE_HEIGHT);
                 var end = ChamberItemMotion.completed(1.2, endTime, operation, secondary);
                 same(end, idle, 2e-14, "completion matches idle endpoint");
                 var before = ChamberItemMotion.completed(1.2 - 1e-6, endTime - 1e-6, operation, secondary);
@@ -93,7 +95,7 @@ public final class VerifyReleaseInvariants {
                     var value = ChamberItemMotion.completed(t, 13.25 + t, operation, secondary);
                     var a = ChamberItemMotion.completed(t + h, 13.25 + t + h, operation, secondary);
                     var b = ChamberItemMotion.completed(t + 2 * h, 13.25 + t + 2 * h, operation, secondary);
-                    check(value.y() > 1 && value.y() < 1.45, "return height remains near chamber");
+                    check(value.y() > 1.4 && value.y() < 1.85, "return height remains clear above chamber");
                     close((-3 * value.y() + 4 * a.y() - b.y()) / (2 * h), value.vy(), 4e-7,
                             "return velocity matches sampled motion");
                 }
@@ -123,7 +125,7 @@ public final class VerifyReleaseInvariants {
         for (double t = 0; t <= 132; t += .125) {
             var value = ScrollRevealMotion.sample(t);
             check(Double.isFinite(value.mainY()) && Double.isFinite(value.secondaryY()), "finite item heights");
-            check(value.mainY() >= 1.11 && value.mainY() < 1.48, "approved lift stays near the chamber");
+            check(value.mainY() >= 1.51 && value.mainY() < 1.88, "approved lift retains its shape above the chamber");
             check(value.imprintAlpha() >= 0 && value.imprintAlpha() <= 1, "imprint alpha bounded");
             check(value.mergeProgress() >= previousMerge - .05 && value.mergeProgress() <= 1, "bounded convergence with small inertia");
             check(value.returnProgress() >= previousReturn && value.returnProgress() <= 1, "final descent is monotone");
@@ -132,13 +134,13 @@ public final class VerifyReleaseInvariants {
         }
         var rest = ScrollRevealMotion.sample(132);
         close(rest.mainX(), 0, 0, "no final horizontal residue");
-        close(rest.mainY(), 1.12, 2e-15, "repeat upgrade idle height");
+        close(rest.mainY(), ChamberItemMotion.BASE_HEIGHT, 2e-15, "repeat upgrade idle height");
         close(rest.imprintAlpha(), 0, 0, "glow fully fades");
         close(rest.angularPitch(), 0, 0, "pitch settles");
         close(rest.angularYaw(), 0, 0, "yaw settles");
         close(rest.angularRoll(), 0, 0, "roll settles");
         for (double clock : new double[]{0, .3, 12, 471.2}) {
-            close(ScrollRevealMotion.sample(132, clock).mainY(), 1.12 + ChamberItemMotion.idle(clock).y(),
+            close(ScrollRevealMotion.sample(132, clock).mainY(), ChamberItemMotion.BASE_HEIGHT + ChamberItemMotion.idle(clock).y(),
                     2e-15, "finished reveal rejoins continuous idle clock");
         }
         // The late lowering is C2 at its endpoints; compare one-sided differences.
@@ -153,6 +155,77 @@ public final class VerifyReleaseInvariants {
                     2e-9, "no late vertical velocity discontinuity at " + boundary);
             close((at - 2 * m1 + m2) / (h * h), (p2 - 2 * p1 + at) / (h * h),
                     2e-6, "no late vertical acceleration discontinuity at " + boundary);
+        }
+    }
+
+    private static void presentationMonotonicityAndClearance() {
+        group = "presentationMonotonicityAndClearance";
+        var cursor = new ScrollRevealMotion.PresentationClock();
+        double previous = 0;
+        for (double candidate : new double[]{0, .5, 8, 7.25, 46, 44, 95, 92, 96, 95.5, 130, 129, 132, 0, Double.NaN}) {
+            double shown = cursor.sample(candidate, false);
+            check(shown >= previous && shown <= 132, "network/time corrections never replay a consumed reveal phase");
+            if (previous >= 96) close(ScrollRevealMotion.sample(shown).imprintAlpha(), 0, 0, "faded imprint cannot flash back");
+            previous = shown;
+        }
+        cursor = new ScrollRevealMotion.PresentationClock();
+        cursor.sample(89, false);
+        close(cursor.sample(90, true), 132, 0, "completed ownership locks the terminal presentation");
+        close(cursor.sample(14, false), 132, 0, "a delayed packet cannot reopen completed presentation");
+        close(new ScrollRevealMotion.PresentationClock().sample(0, false), 0, 0, "a new paid transaction may start afresh");
+        for (double lowest : new double[]{-.12, -.33, -.49, -.7, -1.2}) {
+            for (double clock = 0; clock < 12; clock += .031) {
+                double requested = ChamberItemMotion.idleHeight(clock, false);
+                double safe = ChamberItemMotion.clearHeight(requested, lowest);
+                check(safe + lowest >= ChamberItemMotion.CLEARANCE_FLOOR - 1e-14,
+                        "the whole posed model clears the cage, including resource-pack geometry");
+                check(safe >= requested, "clearance never lowers an item");
+            }
+        }
+        for (boolean secondary : new boolean[]{false, true}) for (double clock : new double[]{.3, 4.8, 13.9}) {
+            var initial = ChamberItemMotion.processing(0, clock, true, secondary);
+            close(initial.y(), ChamberItemMotion.idleHeight(clock, secondary), 2e-15, "work starts at current idle position");
+            close(initial.vy(), ChamberItemMotion.idle(clock, secondary ? ChamberItemMotion.SECONDARY_PHASE : 0).vy(),
+                    2e-15, "work retains current idle velocity");
+            same(ChamberItemMotion.processing(.75, clock + .75, true, secondary),
+                    ChamberItemMotion.processing(.75, true, secondary), 2e-15, "entry hover blends into existing work curve");
+        }
+    }
+
+    private static void lowerBookPose() {
+        group = "bookHoverAndNearEdgeTilt";
+        double delta = ChamberItemMotion.BOOK_BASE_HEIGHT - ChamberItemMotion.BASE_HEIGHT;
+        check(delta < -.15 && delta > -.25, "only book bases move closer to the chamber");
+        for (boolean secondary : new boolean[]{false, true}) for (boolean operation : new boolean[]{false, true}) {
+            for (double t = 0; t < 5; t += .013) {
+                var normal = ChamberItemMotion.processing(t, 51 + t, operation, secondary);
+                var book = ChamberItemMotion.processing(t, 51 + t, operation, secondary, true);
+                same(book, normal.offset(delta), 2e-15, "book work preserves its existing motion shape and derivatives");
+                normal = ChamberItemMotion.completed(t, 57 + t, operation, secondary);
+                book = ChamberItemMotion.completed(t, 57 + t, operation, secondary, true);
+                same(book, normal.offset(delta), 3e-14, "book completion returns continuously to its own idle base");
+            }
+            close(ChamberItemMotion.processing(0, 51, operation, secondary, true).y(),
+                    ChamberItemMotion.idleHeight(51, secondary, true), 2e-15, "book enters processing without a height jump");
+            same(ChamberItemMotion.completed(1.2, 57, operation, secondary, true),
+                    ChamberItemMotion.idle(57, secondary ? ChamberItemMotion.SECONDARY_PHASE : 0)
+                            .offset(ChamberItemMotion.BOOK_BASE_HEIGHT), 2e-15, "book rearm and reopen share the settled idle phase");
+        }
+        for (double open = 0; open <= 1; open += .01) {
+            var q = ChamberItemMotion.bookOrientation(0, open, 0);
+            close(q.dot(q), 1, 2e-15, "book orientation remains normalized");
+            // Native book spine is local Y. Its positive end points toward the
+            // player at yaw 0 (+Z); the near edge must lie below the far edge.
+            double nearY = 1 - 2 * (q.x() * q.x() + q.z() * q.z());
+            double nearZ = 2 * (q.y() * q.z() + q.w() * q.x());
+            check(nearZ > .9 && nearY < -.16, "the player-facing edge dips instead of tilting away");
+            if (open > .9) check(nearY < -.33, "open book gains the requested additional ten-degree dip");
+        }
+        // Clearance checks exercise whole-mesh lower extents, not centre height.
+        for (double actualMinimum : new double[]{-.10, -.20, -.28, -.45}) for (double t = 0; t < 5.6; t += .017) {
+            double proposed = ChamberItemMotion.idleHeight(t, false, true);
+            check(ChamberItemMotion.clearHeight(proposed, actualMinimum) + actualMinimum
+                    >= ChamberItemMotion.CLEARANCE_FLOOR - 1e-14, "lowered and tilted book vertices retain air above the rim");
         }
     }
 

@@ -44,7 +44,25 @@ import java.util.stream.Collectors;
 
 /** Prototype-only evidence from JEI's registered runtime, rather than a parallel recipe simulation. */
 public final class JeiPrototypeVerification {
+    private record Pending(IJeiRuntime runtime, ArcaneRecipeDisplays.Snapshot expected,
+                           int hiddenPlaceholders, int hiddenGenericAssemblies) {}
+    private static Pending pending;
     private JeiPrototypeVerification() {}
+
+    /** JEI may announce its runtime before the login packet has bound item tags. */
+    static void retryWhenTagsReady() {
+        if (pending == null || Minecraft.getInstance().level == null || !ArcaneJeiPlugin.researchReady() || focusTagsPending()) return;
+        Pending next = pending;
+        pending = null;
+        write(next.runtime(), next.expected(), next.hiddenPlaceholders(), next.hiddenGenericAssemblies());
+    }
+
+    private static boolean focusTagsPending() {
+        var views = RandomResearchCategory.views();
+        return !views.isEmpty() && views.stream().allMatch(view ->
+                java.util.Arrays.stream(net.minecraft.world.item.crafting.Ingredient.of(view.pool().school().getFocus()).getItems())
+                        .noneMatch(item -> !item.isEmpty() && !item.is(Items.BARRIER)));
+    }
 
     static Path runDirectory() {
         return Minecraft.getInstance().gameDirectory.toPath().toAbsolutePath().normalize().resolveSibling("run");
@@ -53,6 +71,10 @@ public final class JeiPrototypeVerification {
     public static void write(IJeiRuntime runtime, ArcaneRecipeDisplays.Snapshot expected,
                       int hiddenPlaceholders, int hiddenGenericAssemblies) {
         if (!Boolean.getBoolean("arcane.prototype")) return;
+        if (!ArcaneJeiPlugin.researchReady() || focusTagsPending()) {
+            pending = new Pending(runtime, expected, hiddenPlaceholders, hiddenGenericAssemblies);
+            return;
+        }
         try {
             IRecipeManager manager = runtime.getRecipeManager();
             List<ArcaneRecipeDisplays.Printing> printing = manager.createRecipeLookup(ArcaneJeiPlugin.IMPRINTING).get().toList();
@@ -71,6 +93,7 @@ public final class JeiPrototypeVerification {
             counts.addProperty("native_ascension_assembly_views", ascension.size());
             count(manager, ArcaneJeiPlugin.IMPRINTING, counts, "imprinting");
             count(manager, ArcaneJeiPlugin.INKING, counts, "inking");
+            count(manager, ArcaneJeiPlugin.RESEARCH, counts, "research");
             counts.addProperty("native_printing_assembly_views", assemblies.stream().filter(NativeAssemblyDisplays::isPrintingView).count());
             counts.addProperty("native_cake_assembly", assemblies.stream().filter(recipe -> recipe.getId().equals(NativeAssemblyDisplays.CAKE_ID)).count());
             report.addProperty("complete_flow_category", "arcane_industry:scroll_ascension");
@@ -107,11 +130,57 @@ public final class JeiPrototypeVerification {
                 step.addProperty("solution", recipe.crimson() ? "crimson" : "arcane");
                 step.addProperty("exact_solution_mb", ArcaneRecipeDisplays.millibuckets(recipe.upgrade().solutionCostQuarterMb()));
                 step.addProperty("cake_count", recipe.upgrade().requiresCake() ? 1 : 0);
+                step.addProperty("ink", ForgeRegistries.FLUIDS.getKey(recipe.upgrade().inkFluid()).toString());
                 spell.getAsJsonArray("steps").add(step);
             }
             JsonArray spellCoverage = new JsonArray();
             coverage.values().forEach(spellCoverage::add);
             report.add("spell_upgrade_coverage", spellCoverage);
+            JsonArray researchPools = new JsonArray();
+            for (var view : RandomResearchCategory.views()) {
+                JsonObject pool = new JsonObject();
+                pool.addProperty("school", view.pool().school().getId().toString());
+                pool.addProperty("name", view.pool().school().getDisplayName().getString());
+                pool.addProperty("focus_tag", view.pool().school().getFocus().location().toString());
+                pool.addProperty("crimson", view.crimson());
+                pool.addProperty("headwear", view.headwear());
+                JsonArray focuses = new JsonArray();
+                for (ItemStack item : net.minecraft.world.item.crafting.Ingredient.of(view.pool().school().getFocus()).getItems())
+                    focuses.add(ForgeRegistries.ITEMS.getKey(item.getItem()).toString());
+                pool.add("focus", focuses);
+                JsonObject indexes = new JsonObject();
+                for (var focus : focuses) {
+                    ItemStack item = JeiDrawing.registeredItem(focus.getAsString());
+                    var query = runtime.getJeiHelpers().getFocusFactory().createFocus(RecipeIngredientRole.INPUT,
+                            VanillaTypes.ITEM_STACK, item);
+                    indexes.addProperty(focus.getAsString(), manager.createRecipeLookup(ArcaneJeiPlugin.RESEARCH)
+                            .limitFocus(List.of(query)).get().count());
+                }
+                pool.add("focus_input_recipe_counts", indexes);
+                JsonArray weights = new JsonArray();
+                for (int weight : dev.expedition.arcane.chamber.RandomResearchRules.weights(view.crimson(), view.headwear())) weights.add(weight);
+                pool.add("weights", weights);
+                JsonArray tiers = new JsonArray();
+                for (var tier : view.pool().tiers()) {
+                    JsonArray spells = new JsonArray();
+                    for (var spell : tier) spells.add(spell.getSpellId());
+                    tiers.add(spells);
+                }
+                pool.add("tiers", tiers);
+                researchPools.add(pool);
+            }
+            report.add("research_pools", researchPools);
+            JsonArray recycling = new JsonArray();
+            for (var view : ArcaneRecyclingCategory.views()) {
+                JsonObject row = new JsonObject();
+                row.addProperty("id", view.id().toString());
+                row.addProperty("input", view.input().save(new net.minecraft.nbt.CompoundTag()).toString());
+                row.addProperty("empty", view.empty().save(new net.minecraft.nbt.CompoundTag()).toString());
+                row.addProperty("units", view.units());
+                row.addProperty("mode", view.mode());
+                recycling.add(row);
+            }
+            report.add("recycling_views", recycling);
             long invalidSamples = printing.stream().flatMap(recipe -> recipe.samples().stream())
                     .filter(stack -> PrinterCompat.readPrintableTemplate(stack).isEmpty()).count();
             report.addProperty("invalid_printing_sample_count", invalidSamples);
@@ -250,8 +319,8 @@ public final class JeiPrototypeVerification {
                 var prepared = UnfinishedAscensionScrollItem.create(upgrade.input());
                 lookup.addProperty("prepared_U", lookupContains(runtime, RecipeIngredientRole.INPUT, VanillaTypes.ITEM_STACK, prepared, recipe.getId()));
                 lookup.addProperty("prepared_R", lookupContains(runtime, RecipeIngredientRole.OUTPUT, VanillaTypes.ITEM_STACK, prepared, recipe.getId()));
-                lookup.addProperty("template_catalyst", lookupContains(runtime, RecipeIngredientRole.CATALYST, VanillaTypes.ITEM_STACK,
-                        new ItemStack(ArcaneContent.TEMPLATE.get()), recipe.getId()));
+                lookup.addProperty("chamber_catalyst", lookupContains(runtime, RecipeIngredientRole.CATALYST, VanillaTypes.ITEM_STACK,
+                        new ItemStack(ArcaneContent.CHAMBER.get()), recipe.getId()));
                 lookup.addProperty("source_fluid_U", lookupContains(runtime, RecipeIngredientRole.INPUT, ForgeTypes.FLUID_STACK,
                         new FluidStack(display.crimson() ? CrimsonContent.SOURCE.get() : ArcaneContent.SOURCE.get(), upgrade.solutionCost()), recipe.getId()));
                 lookup.addProperty("ink_U", lookupContains(runtime, RecipeIngredientRole.INPUT, ForgeTypes.FLUID_STACK,

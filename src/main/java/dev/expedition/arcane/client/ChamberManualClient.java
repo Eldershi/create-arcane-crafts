@@ -3,12 +3,12 @@ package dev.expedition.arcane.client;
 import dev.expedition.arcane.chamber.AscensionChamberBlock;
 import dev.expedition.arcane.chamber.AscensionChamberBlockEntity;
 import io.redspace.ironsspellbooks.api.spells.SpellData;
+import io.redspace.ironsspellbooks.api.item.ISpellbook;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.util.Mth;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.registries.ForgeRegistries;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -32,20 +32,18 @@ final class ChamberManualClient {
     private ChamberManualClient() {}
 
     static boolean isBook(ItemStack stack) {
-        if (stack.isEmpty()) return false;
-        var id = ForgeRegistries.ITEMS.getKey(stack.getItem());
-        return id != null && id.getNamespace().equals("irons_spellbooks") && switch (id.getPath()) {
-            case "copper_spell_book", "iron_spell_book", "gold_spell_book", "diamond_spell_book",
-                    "netherite_spell_book", "evoker_spell_book", "necronomicon_spell_book", "dragonskin_spell_book",
-                    "blaze_spell_book", "ice_spell_book", "druidic_spell_book", "rotten_spell_book", "villager_spell_book" -> true;
-            default -> false;
-        };
+        // The native item contract includes future and addon spell books as well.
+        return !stack.isEmpty() && stack.getItem() instanceof ISpellbook;
     }
 
     static State state(AscensionChamberBlockEntity chamber) {
         checkWorld();
         State state = STATES.computeIfAbsent(chamber, unused -> new State());
         state.tick(chamber);
+        // Block replacement/NBT packets can reuse a client entity in the same tick
+        // with an unchanged revision. Presentation must never keep a vacant index.
+        var currentSlots = slots(chamber);
+        if (!currentSlots.contains(state.selectedSlot)) state.selectedSlot = currentSlots.isEmpty() ? -1 : currentSlots.get(0);
         return state;
     }
 
@@ -160,7 +158,8 @@ final class ChamberManualClient {
                 int target = (int) Math.min(48, Math.floor((now - completed + 1) / 28.0 * 48));
                 if (target > emitted) { AscensionCompletionParticle.emit(client, chamber.getBlockPos(), target - emitted, completionBlue); emitted = target; }
             }
-            boolean forcedClosed = pending || chamber.isManualBookSelectionLocked() || chamber.isManualProcessing() || completed >= 0;
+            boolean forcedClosed = pending || chamber.isManualBookSelectionLocked() || chamber.isManualProcessing()
+                    || completed >= 0 && !chamber.isBookRearmed();
             boolean wantOpen = !chamber.isBasinMode() && !primary.isEmpty() && isBook(primary) && !forcedClosed && inRange(chamber) && chamber.isBlazeAlive();
             if (wantOpen && (motion == Motion.CLOSED || motion == Motion.LOCKED || motion == Motion.CLOSING)) {
                 fromOpen = sample(now).open;
@@ -197,9 +196,9 @@ final class ChamberManualClient {
 
         boolean selectable(AscensionChamberBlockEntity chamber, double now) {
             return !pending && !chamber.isManualBookSelectionLocked() && !chamber.isManualProcessing()
-                    && chamber.getManualCompletedAt() < 0 && inRange(chamber)
+                    && (chamber.getManualCompletedAt() < 0 || chamber.isBookRearmed()) && inRange(chamber)
                     && (motion == Motion.OPEN || motion == Motion.OPENING) && now - transitionAt >= 7
-                    && selectedSlot >= 0 && chamber.isBlazeAlive();
+                    && isBook(chamber.getManualPrimary()) && chamber.isBlazeAlive();
         }
 
         Pose sample(double now) {

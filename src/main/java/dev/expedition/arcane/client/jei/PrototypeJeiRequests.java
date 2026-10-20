@@ -27,6 +27,7 @@ public final class PrototypeJeiRequests {
                 || !ModList.get().isLoaded("jei")) return;
         Minecraft minecraft = Minecraft.getInstance();
         if (minecraft.level == null || minecraft.player == null) return;
+        JeiPrototypeVerification.retryWhenTagsReady();
         long now = System.nanoTime();
         if (now < nextPoll) return;
         nextPoll = now + 250_000_000L;

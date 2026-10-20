@@ -42,6 +42,7 @@ public final class ResearchPresentationTests {
                     "ordinary_manual_upgrades_keep_70_ticks");
             result.put("arcane", exercise(level, pos, actor, false));
             result.put("crimson", exercise(level, pos, actor, true));
+            result.put("legacy_paid_draw", exerciseLegacyPaidDraw(level, pos));
             result.put("status", "PASS");
             return result;
         } catch (RuntimeException error) {
@@ -59,9 +60,8 @@ public final class ResearchPresentationTests {
         restore(level, pos, new Snapshot(ArcaneContent.CHAMBER.get().defaultBlockState(), null));
         require(level.getBlockEntity(pos) instanceof AscensionChamberBlockEntity, "registered_chamber_created");
         AscensionChamberBlockEntity chamber = (AscensionChamberBlockEntity) level.getBlockEntity(pos);
-        chamber.inventory.setStackInSlot(AscensionChamberBlockEntity.TEMPLATE_SLOT, new ItemStack(ArcaneContent.TEMPLATE.get()));
         chamber.inventory.setStackInSlot(AscensionChamberBlockEntity.SCROLL_SLOT, new ItemStack(ItemRegistry.SCROLL.get()));
-        ItemStack focus = new ItemStack(Items.BLAZE_ROD, 3);
+        ItemStack focus = new ItemStack(Items.BLAZE_ROD);
         require(RandomResearchRules.poolForFocus(focus).isPresent(), "registered_fire_focus_has_research_pool");
         chamber.inventory.setStackInSlot(AscensionChamberBlockEntity.INK_SLOT, focus.copy());
         require(chamber.sourceTank.fill(new FluidStack(crimson ? CrimsonContent.SOURCE.get() : ArcaneContent.SOURCE.get(), 1000),
@@ -78,7 +78,11 @@ public final class ResearchPresentationTests {
         require(!expected.isEmpty() && expected.getCount() == 1, "server_selected_one_pending_scroll");
         long seed = chamber.getResearchVisualSeed();
         CompoundTag transaction = chamber.saveWithFullMetadata().getCompound("ManualTransaction").copy();
-        assertPaid(chamber, expected, focus, seed, crimson, "initial_payment");
+        ItemStack remainder = ItemStack.EMPTY;
+        assertPaid(chamber, expected, remainder, seed, crimson, "initial_payment");
+        require(ItemStack.matches(chamber.getResearchSecondary(), focus)
+                        && transaction.getBoolean("GuideConsumed") && !chamber.hasTemplate(),
+                "one_guide_consumed_but_its_visual_snapshot_remains_without_runtime_template");
         IItemHandler automation = automation(chamber);
 
         for (int i = 1; i <= 90; i++) {
@@ -89,9 +93,11 @@ public final class ResearchPresentationTests {
         require(chamber.getManualProgress() > AscensionChamberBlockEntity.MANUAL_PROCESSING_TIME,
                 "research_outlives_old_70_tick_endpoint");
 
-        ItemStack template = chamber.inventory.extractItem(AscensionChamberBlockEntity.TEMPLATE_SLOT, 1, false);
+        CompoundTag dead = chamber.saveWithFullMetadata();
+        dead.putBoolean("BlazeAlive", false);
+        chamber.load(dead);
         for (int i = 0; i < 40; i++) chamber.tickServer();
-        require(chamber.getManualProgress() == 90 && !chamber.isResearchVisualRunning(), "missing_template_freezes_work_and_visual_clock");
+        require(chamber.getManualProgress() == 90 && !chamber.isResearchVisualRunning(), "dead_blaze_freezes_work_and_visual_clock");
         require(chamber.getResearchVisualTicks(level.getGameTime() + 100) == 90,
                 "paused_visual_clock_does_not_extrapolate");
         chamber = reload(level, pos, chamber.saveWithFullMetadata());
@@ -102,10 +108,12 @@ public final class ResearchPresentationTests {
                 "nbt_reload_keeps_selected_output_payment_snapshot_and_visual_seed");
         for (int i = 0; i < 30; i++) chamber.tickServer();
         require(chamber.getManualProgress() == 90, "reloaded_paid_draw_stays_paused");
-        assertPaid(chamber, expected, focus, seed, crimson, "paused_reload");
+        assertPaid(chamber, expected, remainder, seed, crimson, "paused_reload");
         cannotTake(chamber, automation, actor, "paused_reload");
 
-        chamber.inventory.setStackInSlot(AscensionChamberBlockEntity.TEMPLATE_SLOT, template);
+        CompoundTag living = chamber.saveWithFullMetadata();
+        living.putBoolean("BlazeAlive", true);
+        chamber.load(living);
         chamber.inventory.setStackInSlot(AscensionChamberBlockEntity.RESULT_SLOT, new ItemStack(Items.COBBLESTONE, 64));
         for (int i = 0; i < 20; i++) chamber.tickServer();
         require(chamber.getManualProgress() == 90 && !chamber.isResearchVisualRunning(),
@@ -120,7 +128,7 @@ public final class ResearchPresentationTests {
                 "added_working_basin_pauses_without_cancelling_paid_draw");
         level.removeBlockEntity(pos.above());
         level.setBlock(pos.above(), Blocks.AIR.defaultBlockState(), 3);
-        assertPaid(chamber, expected, focus, seed, crimson, "output_and_basin_pause");
+        assertPaid(chamber, expected, remainder, seed, crimson, "output_and_basin_pause");
 
         while (chamber.getManualProgress() < 160) {
             chamber.tickServer();
@@ -145,8 +153,8 @@ public final class ResearchPresentationTests {
         require(chamber.getAdditionalReturnDrops().isEmpty() && chamber.getAdditionalReturnDrops().isEmpty(),
                 "committed_metadata_does_not_duplicate_inventory_owned_scroll");
         require(chamber.sourceTank.getFluidAmount() == 500
-                        && ItemStack.matches(chamber.inventory.getStackInSlot(AscensionChamberBlockEntity.INK_SLOT), focus),
-                "all_pauses_reloads_and_commit_charge_only_once_and_keep_focus");
+                        && chamber.inventory.getStackInSlot(AscensionChamberBlockEntity.INK_SLOT).isEmpty(),
+                "all_pauses_reloads_and_commit_charge_blank_guide_and_liquid_only_once");
 
         chamber = reload(level, pos, chamber.saveWithFullMetadata());
         automation = automation(chamber);
@@ -165,7 +173,31 @@ public final class ResearchPresentationTests {
                         && chamber.getAdditionalReturnDrops().isEmpty(), "cannot_collect_a_second_result");
         return Map.of("status", "PASS", "duration_ticks", 161, "pause_reload_at_tick", 90,
                 "late_reload_at_tick", 160, "physical_mb_paid_once", 500,
-                "retained_focus_count", 3, "output_ownership", "one pending -> one result -> one extraction");
+                "guide_consumed_once", 1, "output_ownership", "one pending -> one result -> one extraction");
+    }
+
+    /** A pre-fix paid transaction already owns its result; migration must never charge its retained guide. */
+    private static Map<String, Object> exerciseLegacyPaidDraw(ServerLevel level, BlockPos pos) {
+        restore(level, pos.above(), new Snapshot(Blocks.AIR.defaultBlockState(), null));
+        restore(level, pos, new Snapshot(ArcaneContent.CHAMBER.get().defaultBlockState(), null));
+        AscensionChamberBlockEntity chamber = (AscensionChamberBlockEntity) level.getBlockEntity(pos);
+        chamber.inventory.setStackInSlot(AscensionChamberBlockEntity.SCROLL_SLOT, new ItemStack(ItemRegistry.SCROLL.get()));
+        chamber.inventory.setStackInSlot(AscensionChamberBlockEntity.INK_SLOT, new ItemStack(Items.BLAZE_ROD));
+        chamber.sourceTank.fill(new FluidStack(ArcaneContent.SOURCE.get(), 1000), IFluidHandler.FluidAction.EXECUTE);
+        chamber.tickServer();
+        ItemStack original = chamber.getResearchOutput();
+        CompoundTag legacy = chamber.saveWithFullMetadata();
+        legacy.getCompound("ManualTransaction").remove("GuideConsumed");
+        chamber.inventory.setStackInSlot(AscensionChamberBlockEntity.INK_SLOT, new ItemStack(Items.BLAZE_ROD, 3));
+        legacy.put("Inventory", chamber.inventory.serializeNBT());
+        chamber = reload(level, pos, legacy);
+        for (int i = 0; i < AscensionChamberBlockEntity.RESEARCH_PROCESSING_TIME; i++) chamber.tickServer();
+        require(chamber.inventory.getStackInSlot(AscensionChamberBlockEntity.INK_SLOT).getCount() == 3
+                        && chamber.sourceTank.getFluidAmount() == 500
+                        && ItemStack.matches(chamber.inventory.getStackInSlot(AscensionChamberBlockEntity.RESULT_SLOT), original)
+                        && chamber.getAdditionalReturnDrops().isEmpty(),
+                "legacy_paid_transaction_keeps_its_original_payment_output_and_untruncated_guide_stack");
+        return Map.of("status", "PASS", "legacy_guide_count_preserved", 3, "additional_payment", 0);
     }
 
     private static void cannotTake(AscensionChamberBlockEntity chamber, IItemHandler automation,

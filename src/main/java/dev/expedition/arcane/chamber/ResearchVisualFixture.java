@@ -21,7 +21,7 @@ import net.minecraftforge.fluids.capability.IFluidHandler;
 public final class ResearchVisualFixture {
     private ResearchVisualFixture() {}
 
-    /** No template: the actual server work clock pauses at the requested shader-inspection phase. */
+    /** A blocked result slot pauses the real paid work clock at the shader-inspection phase. */
     public static void show(ServerLevel level, BlockPos pos, int logicalTick, boolean crimson, int rarity) {
         create(level, pos, logicalTick, crimson, rarity, false);
     }
@@ -72,9 +72,8 @@ public final class ResearchVisualFixture {
         if (!(level.getBlockEntity(pos) instanceof AscensionChamberBlockEntity chamber)) {
             throw new IllegalStateException("Native ascension chamber was not created at fixture position");
         }
-        chamber.inventory.setStackInSlot(AscensionChamberBlockEntity.INK_SLOT, focus.copy());
-        if (playing) chamber.inventory.setStackInSlot(AscensionChamberBlockEntity.TEMPLATE_SLOT,
-                new ItemStack(ArcaneContent.TEMPLATE.get()));
+        if (!playing) chamber.inventory.setStackInSlot(AscensionChamberBlockEntity.RESULT_SLOT,
+                new ItemStack(Items.COBBLESTONE, 64));
         chamber.sourceTank.fill(new FluidStack(crimson ? CrimsonContent.SOURCE.get() : ArcaneContent.SOURCE.get(), 500),
                 IFluidHandler.FluidAction.EXECUTE);
 
@@ -88,6 +87,7 @@ public final class ResearchVisualFixture {
         transaction.putInt("DrawnTier", rarity);
         transaction.putInt("ActualTier", rarity);
         transaction.putInt("PhysicalCostMb", RandomResearchRules.SOLUTION_COST_MB);
+        transaction.putBoolean("GuideConsumed", true);
         transaction.putBoolean("Crimson", crimson);
         transaction.putBoolean("Headwear", false);
         transaction.putLong("VisualSeed", 0x5720a4f84L);
