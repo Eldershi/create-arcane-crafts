@@ -5,6 +5,7 @@
 ## 自动构建
 
 - [ ] JDK 17，固定 Gradle Wrapper、ForgeGradle 和依赖版本；普通干净克隆可运行 `./gradlew clean build`。
+- [ ] 连续两轮 `clean build prototypeJar`，确认命中 Java 编译缓存后，正式包与原型包仍有 AP 生成的 refmap 和正确生产映射。
 - [ ] `verifyReleaseInvariants`：权威时钟、暂停／回退、收尾连续性、待机接续、四元数和有限数值、抽取品级、音效游标。
 - [ ] `verifyReleaseJar`：版本、Mixin/refmap、生产映射、JSON、许可一致、仅 8 张原创 PNG，无上游素材／嵌套依赖／QA 类。
 - [ ] `./gradlew prototypeJar` 可构建，测试包和正式包不同时安装。
@@ -39,4 +40,5 @@
 - [ ] 正式 JAR、源码包、SHA256SUMS 和更新记录一致，测试包不作为普通安装包上传。
 - [ ] 清点自有／派生资源及许可；排除依赖 JAR、存档、截图、启动元数据、账号与本机缓存。
 - [ ] 从公开 Git 历史创建提交；本地原型受限历史不推送，不强制覆盖远程。
-- [ ] 推送版本标签与 GitHub Release，核对下载附件哈希、源码指向和 CI 结果。
+- [ ] 推送版本标签，等待该标签的冷构建／缓存恢复 CI 均通过，再将 GitHub Release 从草稿发布；不能仅依据主分支首次构建。
+- [ ] 核对下载附件哈希、源码指向和发布状态。

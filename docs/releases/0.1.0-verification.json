@@ -104,6 +104,51 @@
       "status": "PASS",
       "productionClasses": 197,
       "byteDifferences": []
+    },
+    "mixinProcessorCache": {
+      "status": "PASS",
+      "fix": "Declare all three MixinGradle compileJava outputs; caching remains enabled",
+      "coldBuild": "PASS; compileJava executed; 37 seconds",
+      "warmBuild": "PASS; compileJava FROM-CACHE; 22 seconds",
+      "cachedOutputsRestored": [
+        "compileJava-refmap.json",
+        "compileJava-mappings.tsrg",
+        "arcane_industry.refmap.json"
+      ],
+      "artifactBytesMatchColdBuild": true,
+      "artifacts": [
+        {
+          "file": "create-arcane-crafts-0.1.0-prototype.jar",
+          "sizeBytes": 826368,
+          "sha256": "181f6c98ce824531614e4073646270cc429946765b87c20c36eab77f1a11cfed",
+          "refmap": {
+            "mappings": {},
+            "data": {}
+          }
+        },
+        {
+          "file": "create-arcane-crafts-0.1.0-sources.jar",
+          "sizeBytes": 449401,
+          "sha256": "cc5bf5bb30ea8322e36c7bde6c4e5b8cbfd840a04dcdb527fee0fda83a6f0a5d",
+          "refmap": null
+        },
+        {
+          "file": "create-arcane-crafts-0.1.0.jar",
+          "sizeBytes": 651916,
+          "sha256": "689d4c024ef480ee792ac7dc1048b51d4629f48fa5620de76f8b9b2d2458cb24",
+          "refmap": {
+            "mappings": {},
+            "data": {}
+          }
+        }
+      ],
+      "productionChecks": 42,
+      "pureJavaInvariantChecks": 33353,
+      "soundRegressionChecks": 288,
+      "logs": [
+        "cache-fix-cold-build.log",
+        "cache-fix-warm-build.log"
+      ]
     }
   },
   "currentRuntimeAcceptance": {
@@ -259,7 +304,12 @@
     "workflow": ".github/workflows/build.yml",
     "command": "./gradlew --no-daemon --max-workers=2 clean build prototypeJar",
     "resultLocation": "https://github.com/Eldershi/create-arcane-crafts/actions/workflows/build.yml",
-    "scope": "Independent clean-checkout build; use the run for sourceTag to read its actual result"
+    "scope": "Independent clean-checkout build; use the run for sourceTag to read its actual result",
+    "commands": [
+      "./gradlew --no-daemon --max-workers=2 clean build prototypeJar",
+      "./gradlew --no-daemon --max-workers=2 --console=plain clean build prototypeJar"
+    ],
+    "cacheCoverage": "Second clean rebuild must report compileJava FROM-CACHE and pass the same acceptance checks"
   },
   "notCovered": [
     "Fabulous graphics",

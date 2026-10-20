@@ -13,6 +13,8 @@ java -version
 
 Windows 使用 `gradlew.bat clean build`。生产产物为 `build/libs/create-arcane-crafts-0.1.0.jar`，源码包单独生成。`check` 同时执行 `verifyReleaseInvariants` 和 `verifyReleaseJar`：前者运行纯 Java 动作、音效与研究抽取不变量，后者检查 Mixin 清单、refmap、原生铁砧桥接的生产映射及发行内容；编译通过并不能代替真实服务器和客户端验收。
 
+MixinGradle 0.7.38 的 AP 将 原始 refmap、打包用命名副本和额外 SRG 映射写在 `compileJava` 临时目录，默认 Java 编译缓存只保留类输出。只验证冷构建会漏掉“`compileJava FROM-CACHE` 成功、JAR 却缺少 refmap”的问题。`build.gradle` 显式声明原始 refmap、用于打包的命名副本及额外 SRG 映射，使 Gradle 缓存同时保存并恢复；不能用仓库里的静态 refmap 或关闭发布包检查掩盖问题。CI 连续执行两轮 `clean build prototypeJar`，第二轮从编译缓存恢复后仍须通过同样的 JAR 检查。
+
 可以单独执行 `./gradlew verifyReleaseInvariants`。构建报告写入 `build/reports/release-invariants.json` 与 `build/reports/release-jar.json`；它们是当前构建生成的证据，不作为源码静态文件伪造 PASS。
 
 生产 JAR 排除原型验收夹具和截图请求入口。需要运行下文的游戏内原型检查时，另行构建带 `prototype` classifier 的测试包：

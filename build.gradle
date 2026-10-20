@@ -125,6 +125,20 @@ tasks.withType(JavaCompile).configureEach {
     options.release = 17
 }
 
+// MixinGradle 0.7.38 writes these AP products outside destinationDirectory.
+// Its doLast also copies the raw refmap to the configured resource name.
+// Declare all three as compile outputs so FROM-CACHE restores the named refmap
+// consumed by addMixinsToJar and the extra mappings consumed by reobfJar.
+// Keep the plugin's paths/content unchanged; do not disable compilation caching.
+tasks.named('compileJava', JavaCompile).configure {
+    outputs.file(provider { new File(temporaryDir, "${name}-refmap.json") })
+            .withPropertyName('mixinAnnotationProcessorRefmap')
+    outputs.file(provider { new File(temporaryDir, "${name}-mappings.tsrg") })
+            .withPropertyName('mixinAnnotationProcessorMappings')
+    outputs.file(provider { new File(temporaryDir, sourceSets.main.ext.refMap.toString()) })
+            .withPropertyName('mixinPackagedRefmap')
+}
+
 // Keep the source resource readable while connecting it to the AP-generated refmap.
 // This also works with the prototype resource, which predates an explicit refmap key.
 tasks.named('processResources', ProcessResources).configure {
