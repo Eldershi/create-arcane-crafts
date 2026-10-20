@@ -1,12 +1,18 @@
 # Runtime materials
 
-The addon references the player's installed dependencies instead of shipping their copied or recolored PNGs. A required client resource pack builds 75 PNGs and 16 animation declarations in memory. The approved 1.20.1 prototype has 83 PNGs; the other eight are original casing/core patterns and rune sheets.
+The addon references the player's installed dependencies instead of shipping their copied or recolored PNGs. A required client resource pack builds 79 PNGs and 16 animation declarations in memory. The approved 1.20.1 prototype has 87 PNGs; the other eight are original casing/core patterns and rune sheets.
 
 `RuntimeAssetPack` reads source assets directly from the installed mod files and the running Minecraft 1.20.1 vanilla pack. It does not read its own outputs through the resource manager, download assets, modify dependency JARs, or write generated assets to disk. Normal resource reload rebuilds the pack. The displayed materials were verified against the versions listed in `runtime-texture-reference.json`.
 
 `assets/arcane_industry/runtime/texture_transforms.json` contains authored color maps, native UV crops, nearest-neighbor sampling rules, material masks, and small original glyph/eye strokes. It contains no complete source pixel layout, compressed image payload, or target texel-index table. Container glass, fluid animation patterns, particles, upgrade frames and parchment remain supplied by their installed dependencies. The two eyebrow strokes are drawn from short geometric stair segments, with authored face-oriented shading, so Minecraft 1.21 Breeze assets are not required.
 
 `RuntimeModelAssets` independently derives model resources from installed native geometry and the addon's authored transforms. Texture references continue to use the same addon IDs, preserving existing renderers and saved worlds.
+
+`RuntimeGrindstoneModels` reads the installed CEI wheel outline, unions its overlapping teeth, and extrudes the authored stone/mithril/stone bands. The middle band is 3.5 model pixels thick and has a fixed angular offset whose maximum outer-edge displacement is one model pixel. Exposed shoulders are computed by polygon difference; all bands share one runtime rotation. The native shaft, stone cap and inventory drain body are selected from the installed CEI models. Two OBJ resources, their MTL and two Forge composite models are generated in memory. The world drain body remains the native static model.
+
+`RuntimeGrindstoneTextures` uses installed stone/mithril color ramps with the selected r57 coarse material rules; it generates four new textures without copying the source pixel layout. `tools/VerifyRuntimeGrindstone.java` runs the production generators offline and compares the four decoded PNGs, two composite models, two ordered OBJ meshes and MTL to the selected art resources. Its output belongs in the local test evidence directory, outside published resources.
+
+Both wheel block entities register the same Flywheel partial. The drain visual retains vanilla rendering so CEI can draw items and fluid; its kinetic renderer skips only the wheel while Flywheel is active. The existing drain renderer supplies the same addon wheel model when Flywheel is disabled. Forge's built-in OBJ and composite loaders require no addon loader registration; the additional wheel model is explicitly registered for baking.
 
 The approved texture reference records dimensions and SHA-256 hashes of decoded RGBA pixels. PNG compression and ancillary metadata may differ without changing appearance. `tools/VerifyRuntimeTextures.java` calls the actual runtime texture generator and checks all 218,112 generated pixels, plus parsed animation metadata, without launching the game. Compile it against the development runtime classpath and built addon classes, and supply `docs/runtime-texture-reference.json` followed by the installed Minecraft 1.20.1 assets JAR and the dependency JARs listed in the reference.
 

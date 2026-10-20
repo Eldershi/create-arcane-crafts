@@ -18,6 +18,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.RecipeSerializer;
 import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.material.Fluid;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.items.ItemStackHandler;
@@ -71,13 +72,17 @@ public final class ScrollInkingRecipe extends FillingRecipe {
     @Override
     public void readAdditional(FriendlyByteBuf buffer) {
         super.readAdditional(buffer);
-        validatePrintingInk();
+        validatePrintingInkNetwork();
     }
 
-    private void validatePrintingInk() {
+    private void validatePrintingAmount() {
         if (fluidIngredients.size() != 1 || getRequiredFluid().getRequiredAmount() != UninkedScrollItem.INK_AMOUNT) {
             throw new JsonSyntaxException("Scroll inking requires exactly 250 mB of native ink");
         }
+    }
+
+    private void validatePrintingInk() {
+        validatePrintingAmount();
         // Tags may not be bound while recipes load. Validate the declared tag, not its current expansion.
         JsonObject ingredient = getRequiredFluid().serialize();
         if (ingredient.has("fluidTag") && PRINTING_INKS.toString().equals(ingredient.get("fluidTag").getAsString())) return;
@@ -89,6 +94,27 @@ public final class ScrollInkingRecipe extends FillingRecipe {
             }
         }
         throw new JsonSyntaxException("Scroll inking requires the printing_inks tag or one native ink fluid");
+    }
+
+    private void validatePrintingInkNetwork() {
+        validatePrintingAmount();
+        // Create transmits an expanded list for FluidTagIngredient, not its TagKey.
+        // Calling serialize() on that network-only representation dereferences a
+        // deliberately absent tag and disconnects clients during recipe sync.
+        // The server already checked the declared tag while loading JSON. Keep
+        // datapack-defined expansions (including an empty tag) authoritative.
+        if (getRequiredFluid() instanceof com.simibubi.create.foundation.fluid.FluidIngredient.FluidTagIngredient) return;
+        var fluids = getRequiredFluid().getMatchingFluidStacks();
+        if (fluids.stream().anyMatch(stack -> stack.isEmpty() || !isNativeInk(stack.getFluid()))) {
+            throw new JsonSyntaxException("Scroll inking network ingredient must contain only native ink fluids");
+        }
+    }
+
+    private static boolean isNativeInk(Fluid fluid) {
+        for (SpellRarity rarity : SpellRarity.values()) {
+            if (InkItem.getInkForRarity(rarity).fluid().get().isSame(fluid)) return true;
+        }
+        return false;
     }
 
     private static Optional<FillingRecipe> findOwnedRecipe(Level level, ItemStack input) {

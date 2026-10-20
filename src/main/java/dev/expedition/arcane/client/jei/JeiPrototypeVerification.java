@@ -43,14 +43,14 @@ import java.util.TreeSet;
 import java.util.stream.Collectors;
 
 /** Prototype-only evidence from JEI's registered runtime, rather than a parallel recipe simulation. */
-final class JeiPrototypeVerification {
+public final class JeiPrototypeVerification {
     private JeiPrototypeVerification() {}
 
     static Path runDirectory() {
         return Minecraft.getInstance().gameDirectory.toPath().toAbsolutePath().normalize().resolveSibling("run");
     }
 
-    static void write(IJeiRuntime runtime, ArcaneRecipeDisplays.Snapshot expected,
+    public static void write(IJeiRuntime runtime, ArcaneRecipeDisplays.Snapshot expected,
                       int hiddenPlaceholders, int hiddenGenericAssemblies) {
         if (!Boolean.getBoolean("arcane.prototype")) return;
         try {
@@ -65,6 +65,7 @@ final class JeiPrototypeVerification {
             report.addProperty("prototype_only", true);
             report.addProperty("source", "JEI IRecipeManager registered runtime");
             report.addProperty("visual_review_required", true);
+            report.add("native_assembly_network_clone", NativeAssemblyDisplayNetworkTests.run(Minecraft.getInstance().level.getRecipeManager(), expected));
             JsonObject counts = new JsonObject();
             counts.addProperty("ascension", ascension.size());
             counts.addProperty("native_ascension_assembly_views", ascension.size());

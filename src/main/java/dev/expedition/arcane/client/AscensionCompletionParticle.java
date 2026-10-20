@@ -5,6 +5,8 @@ import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.particle.ParticleRenderType;
 import net.minecraft.client.particle.SpriteSet;
 import net.minecraft.client.particle.TextureSheetParticle;
+import net.minecraft.client.renderer.LightTexture;
+import net.minecraft.client.ParticleStatus;
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.Mth;
 
@@ -16,9 +18,12 @@ final class AscensionCompletionParticle extends TextureSheetParticle {
 
     static void sprites(boolean isBlue, SpriteSet value) { if (isBlue) blue = value; else gold = value; }
 
-    static void emit(ClientLevel level, BlockPos pos, int count) {
+    static void emit(ClientLevel level, BlockPos pos, int count, boolean isBlue) {
+        ParticleStatus setting = Minecraft.getInstance().options.particles().get();
+        if (setting == ParticleStatus.MINIMAL) return;
         for (int i = 0; i < count; i++) {
-            SpriteSet sprites = level.random.nextBoolean() ? gold : blue;
+            if (setting == ParticleStatus.DECREASED && level.random.nextBoolean()) continue;
+            SpriteSet sprites = isBlue ? blue : gold;
             if (sprites != null) Minecraft.getInstance().particleEngine.add(new AscensionCompletionParticle(level, pos, sprites));
         }
     }
@@ -49,12 +54,14 @@ final class AscensionCompletionParticle extends TextureSheetParticle {
         yd += .004;
         y += yd;
         yd *= .96;
+        alpha = 1 - (float) Mth.smoothstep(Mth.clamp((age / (float) lifetime - .45F) / .55F, 0, 1));
         setSpriteFromAge(sprites);
     }
 
-    @Override public int getLightColor(float partialTick) { return 240; }
-    @Override public ParticleRenderType getRenderType() { return ParticleRenderType.PARTICLE_SHEET_OPAQUE; }
+    @Override public int getLightColor(float partialTick) { return LightTexture.FULL_BRIGHT; }
+    @Override public ParticleRenderType getRenderType() { return ParticleRenderType.PARTICLE_SHEET_TRANSLUCENT; }
     @Override public float getQuadSize(float partialTick) {
-        return quadSize * Mth.clamp((age + partialTick) / lifetime * 32, 0, 1);
+        float life = Mth.clamp((age + partialTick) / lifetime, 0, 1);
+        return quadSize * Mth.clamp(life * 32, 0, 1) * (1 - .65F * life * life);
     }
 }

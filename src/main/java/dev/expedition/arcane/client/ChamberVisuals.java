@@ -197,7 +197,7 @@ final class ChamberVisuals {
     void manualEffects(String state, double time, double top, double opacity, PoseStack pose,
                        MultiBufferSource buffers, int overlay) {
         if (opacity <= .0001) return;
-        top = Math.max(.251, top);
+        top = Math.max(.251, Math.min(1, top));
         double speed = state.equals("super") ? .09375 : .078125;
         double scrollU = 16 * fraction(speed * time / 2), scrollV = 16 * fraction(speed * time);
         VertexConsumer fire = buffers.getBuffer(RenderType.entityTranslucentEmissive(

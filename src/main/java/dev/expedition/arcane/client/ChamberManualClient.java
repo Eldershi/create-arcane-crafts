@@ -100,7 +100,9 @@ final class ChamberManualClient {
         boolean hadPartner;
         int selectedSlot = -1, selectionRevision = -1;
         private int emitted;
-        private ChamberManualSounds.Work workSound;
+        private boolean completionBlue;
+        private long researchSeed = Long.MIN_VALUE;
+        private ChamberManualSounds.Research researchSound;
         private net.minecraft.client.resources.sounds.SimpleSoundInstance openingSound;
 
         void tick(AscensionChamberBlockEntity chamber) {
@@ -131,24 +133,32 @@ final class ChamberManualClient {
                 materialPlaced = nextMaterial;
             }
             if (chamber.isManualProcessing()) hadPartner |= !chamber.getManualSecondary().isEmpty();
-            if (nextStarted != started) {
-                if (nextStarted >= 0 && now - nextStarted <= 7) {
-                    if (workSound != null) workSound.end();
-                    workSound = ChamberManualSounds.work(chamber.getBlockPos(), chamber.getBlockState().getValue(AscensionChamberBlock.STATE) == 2, (int) Math.max(0, now - nextStarted));
+            boolean research = chamber.hasResearchPresentation();
+            if (chamber.isManualProcessing()) {
+                completionBlue = chamber.getBlockState().getValue(AscensionChamberBlock.STATE) == 2;
+            }
+            if (research) {
+                if (researchSound == null || researchSeed != chamber.getResearchVisualSeed()) {
+                    if (researchSound != null) researchSound.stop();
+                    researchSeed = chamber.getResearchVisualSeed();
+                    researchSound = ChamberManualSounds.research(chamber.getBlockPos(), chamber.isResearchCrimson());
                 }
-                started = nextStarted;
+                researchSound.update(ScrollRevealMotion.logicalTick(chamber.getResearchVisualTicks(now)),
+                        chamber.getResearchRarity(), !chamber.isManualProcessing() || chamber.isResearchVisualRunning());
+            } else if (researchSound != null) {
+                researchSound.stop(); researchSound = null;
             }
+            started = nextStarted;
             if (nextCompleted != completed) {
-                if (observed && nextCompleted >= 0 && now - nextCompleted <= 2) {
-                    ChamberManualSounds.play("success", chamber.getBlockPos(), .2F, 1);
+                if (!research && observed && nextCompleted >= 0 && now - nextCompleted <= 2) {
+                    ChamberManualSounds.complete(chamber.getManualOperation(), chamber.getBlockPos());
                     emitted = 0;
-                } else if (nextCompleted >= 0) emitted = 72;
+                } else if (nextCompleted >= 0) emitted = 48;
                 completed = nextCompleted;
-                if (workSound != null) { workSound.fadeOut(); workSound = null; }
             }
-            if (completed >= 0 && !primary.isEmpty() && chamber.getLevel() instanceof ClientLevel client) {
-                int target = (int) Math.min(72, Math.floor((now - completed + 1) / 28.0 * 72));
-                if (target > emitted) { AscensionCompletionParticle.emit(client, chamber.getBlockPos(), target - emitted); emitted = target; }
+            if (!research && completed >= 0 && !primary.isEmpty() && chamber.getLevel() instanceof ClientLevel client) {
+                int target = (int) Math.min(48, Math.floor((now - completed + 1) / 28.0 * 48));
+                if (target > emitted) { AscensionCompletionParticle.emit(client, chamber.getBlockPos(), target - emitted, completionBlue); emitted = target; }
             }
             boolean forcedClosed = pending || chamber.isManualBookSelectionLocked() || chamber.isManualProcessing() || completed >= 0;
             boolean wantOpen = !chamber.isBasinMode() && !primary.isEmpty() && isBook(primary) && !forcedClosed && inRange(chamber) && chamber.isBlazeAlive();
@@ -167,9 +177,6 @@ final class ChamberManualClient {
                 if (now - transitionAt >= 10.4) motion = forcedClosed ? Motion.LOCKED : Motion.CLOSED;
             }
             if (primary.isEmpty() || !chamber.isBlazeAlive()) { motion = Motion.CLOSED; pending = false; stop(); }
-            if (workSound != null && (!chamber.isManualProcessing() || now - started >= 50)) {
-                workSound.fadeOut(); workSound = null;
-            }
             observed = true;
         }
 
@@ -212,7 +219,7 @@ final class ChamberManualClient {
         }
         private static float page(float value) { return Mth.clamp((value - Mth.floor(value)) * 1.6F - .3F, 0, 1); }
         void stop() {
-            if (workSound != null) { workSound.end(); workSound = null; }
+            if (researchSound != null) { researchSound.stop(); researchSound = null; }
             if (openingSound != null) { Minecraft.getInstance().getSoundManager().stop(openingSound); openingSound = null; }
         }
     }

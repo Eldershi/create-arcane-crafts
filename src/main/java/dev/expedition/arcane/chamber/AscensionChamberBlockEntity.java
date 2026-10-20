@@ -69,6 +69,8 @@ public class AscensionChamberBlockEntity extends BlockEntity implements IHaveGog
     public static final int FUEL_DURATION = BOTTLE_AMOUNT * TICKS_PER_MB;
     public static final int PROCESSING_TIME = 80;
     public static final int MANUAL_PROCESSING_TIME = 70;
+    /** The approved reveal lasts 8.014s, rounded up to an authoritative 20 TPS endpoint. */
+    public static final int RESEARCH_PROCESSING_TIME = 161;
     private static final int MANUAL_BOOK_CLOSE_TICKS = 11;
     public static final int BASE_SOLUTION_COST = 250;
     public static final int SOLUTION_CAPACITY = 4000;
@@ -371,9 +373,20 @@ public class AscensionChamberBlockEntity extends BlockEntity implements IHaveGog
     private boolean researchVisualRunning;
     private long researchVisualSampleAt;
     public double getResearchVisualTicks(double now) {
-        return Math.min(MANUAL_PROCESSING_TIME, manualProgress
+        return Math.min(RESEARCH_PROCESSING_TIME, manualProgress
                 + (researchVisualRunning ? Math.max(0, Math.min(10, now - researchVisualSampleAt)) : 0));
     }
+    public boolean isResearchVisualRunning() { return researchVisualRunning && isResearchProcessing(); }
+    public boolean hasResearchPresentation() {
+        return (manualProcessing || manualResultReady) && RandomResearchRules.OPERATION.equals(manualOperation)
+                && RandomResearchRules.OPERATION.equals(manualTransaction.getString("Kind"));
+    }
+    public ItemStack getResearchPrimary() { return ItemStack.of(manualTransaction.getCompound("Primary")); }
+    public ItemStack getResearchSecondary() { return ItemStack.of(manualTransaction.getCompound("Modifier")); }
+    public ItemStack getResearchOutput() { return ItemStack.of(manualTransaction.getCompound("Output")); }
+    public boolean isResearchCrimson() { return manualTransaction.getBoolean("Crimson"); }
+    public int getResearchRarity() { return manualTransaction.getInt("ActualTier"); }
+    public long getResearchVisualSeed() { return manualTransaction.getLong("VisualSeed"); }
 
     @Override public net.minecraft.world.phys.AABB getRenderBoundingBox() {
         return new net.minecraft.world.phys.AABB(worldPosition).inflate(.9, 1.6, .9);
@@ -638,6 +651,7 @@ public class AscensionChamberBlockEntity extends BlockEntity implements IHaveGog
         transaction.putInt("PhysicalCostMb", RandomResearchRules.SOLUTION_COST_MB);
         transaction.putBoolean("Crimson", crimson);
         transaction.putBoolean("Headwear", headwear);
+        transaction.putLong("VisualSeed", level.random.nextLong());
         transaction.put("Goggles", gogglesDecoration.save(new CompoundTag()));
         transaction.put("Crown", crownDecoration.save(new CompoundTag()));
         manualMutation = true;
@@ -668,11 +682,12 @@ public class AscensionChamberBlockEntity extends BlockEntity implements IHaveGog
             sync(); // Freeze/resume the visual clock immediately when paid work pauses/resumes.
         }
         if (!canAdvance) return;
-        if (++manualProgress < MANUAL_PROCESSING_TIME) return;
+        if (++manualProgress < RESEARCH_PROCESSING_TIME) return;
         manualMutation = true;
         try {
             putOutput(RESULT_SLOT, output);
-            manualTransaction = new CompoundTag();
+            // Retain immutable presentation metadata until collection. Ownership is now
+            // solely the result slot; getAdditionalReturnDrops only reads a pending draw.
             manualProcessing = false;
             researchVisualRunning = false;
             manualResultReady = true;
@@ -1025,6 +1040,7 @@ public class AscensionChamberBlockEntity extends BlockEntity implements IHaveGog
     }
     private void clearManualResult() {
         manualResultReady = false;
+        manualTransaction = new CompoundTag();
         manualProgress = 0;
         manualStartedAt = -1;
         manualCompletedAt = -1;
@@ -1158,7 +1174,9 @@ public class AscensionChamberBlockEntity extends BlockEntity implements IHaveGog
         }
         progress = Math.max(0, Math.min(PROCESSING_TIME - 1, tag.getInt("Progress")));
         activeScroll = ItemStack.EMPTY;
-        manualProgress = Math.max(0, Math.min(MANUAL_PROCESSING_TIME, tag.getInt("ManualProgress")));
+        int savedDuration = RandomResearchRules.OPERATION.equals(tag.getString("ManualOperation"))
+                ? RESEARCH_PROCESSING_TIME : MANUAL_PROCESSING_TIME;
+        manualProgress = Math.max(0, Math.min(savedDuration, tag.getInt("ManualProgress")));
         researchVisualRunning = tag.getBoolean("ResearchVisualRunning");
         researchVisualSampleAt = tag.getLong("ResearchVisualSampleAt");
         manualStartedAt = tag.contains("ManualStartedAt") ? tag.getLong("ManualStartedAt") : -1;

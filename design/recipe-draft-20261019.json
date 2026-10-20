@@ -1,0 +1,682 @@
+{
+  "title": "奥术工业配方草案",
+  "version": 1,
+  "status": "material_crafting_drafts_and_implemented_native_assembly",
+  "date": "2026-10-19",
+  "units": {
+    "bottle_mb": 250,
+    "bucket_mb": 1000,
+    "essence_yield_mb": 250
+  },
+  "recipes": [
+    {
+      "id": "ascension_chamber",
+      "process": "crafting_shaped",
+      "inputs": [
+        {
+          "item": "create:blaze_burner",
+          "count": 1
+        },
+        {
+          "item": "create:copper_sheet",
+          "count": 4
+        },
+        {
+          "item": "minecraft:amethyst_block",
+          "count": 2
+        },
+        {
+          "item": "create:precision_mechanism",
+          "count": 1
+        },
+        {
+          "item": "create:fluid_tank",
+          "count": 1
+        }
+      ],
+      "output": {
+        "item": "arcane_industry:ascension_chamber",
+        "count": 1
+      },
+      "note": "消耗已捕捉烈焰人的燃烧室，保留下界捕捉及精密构件阶段；加入原生储液罐对应单罐结构。图案：铜/储液罐/铜，紫晶块/燃烧室/紫晶块，铜/精密构件/铜。",
+      "status": "proposed_revision",
+      "pattern": [
+        "CTC",
+        "ABA",
+        "CPC"
+      ],
+      "key": {
+        "C": "create:copper_sheet",
+        "T": "create:fluid_tank",
+        "A": "minecraft:amethyst_block",
+        "B": "create:blaze_burner",
+        "P": "create:precision_mechanism"
+      }
+    },
+    {
+      "id": "ascension_template",
+      "process": "crafting_shaped",
+      "inputs": [
+        {
+          "item": "create:golden_sheet",
+          "count": 4
+        },
+        {
+          "item": "minecraft:amethyst_shard",
+          "count": 1
+        },
+        {
+          "item": "create:copper_sheet",
+          "count": 3
+        },
+        {
+          "item": "create_dragons_plus:blaze_upgrade_smithing_template",
+          "count": 1
+        }
+      ],
+      "output": {
+        "item": "arcane_industry:ascension_template",
+        "count": 1
+      },
+      "note": "用户指定九格有序合成，一个升华模板；加工时模板可重复使用。",
+      "status": "implemented_user_revision",
+      "pattern": [
+        "GAG",
+        "CTC",
+        "GCG"
+      ],
+      "key": {
+        "G": "create:golden_sheet",
+        "A": "minecraft:amethyst_shard",
+        "C": "create:copper_sheet",
+        "T": "create_dragons_plus:blaze_upgrade_smithing_template"
+      }
+    },
+    {
+      "id": "mana_supply_upgrade",
+      "process": "crafting_shaped",
+      "inputs": [
+        {
+          "item": "create:andesite_alloy",
+          "count": 4
+        },
+        {
+          "item": "minecraft:amethyst_shard",
+          "count": 2
+        },
+        {
+          "item": "irons_spellbooks:blank_rune",
+          "count": 1
+        },
+        {
+          "item": "sophisticatedbackpacks:upgrade_base",
+          "count": 1
+        },
+        {
+          "item": "irons_spellbooks:arcane_essence",
+          "count": 1
+        }
+      ],
+      "output": {
+        "item": "arcane_industry:mana_supply_upgrade",
+        "count": 1
+      },
+      "note": "用户指定：安山合金四角，左右紫水晶碎片；保留空白符石、空白升级、奥术原质。另装原生储罐升级才能供液。",
+      "status": "implemented_user_revision",
+      "pattern": [
+        "DRD",
+        "AUA",
+        "DED"
+      ],
+      "key": {
+        "D": "create:andesite_alloy",
+        "R": "irons_spellbooks:blank_rune",
+        "A": "minecraft:amethyst_shard",
+        "U": "sophisticatedbackpacks:upgrade_base",
+        "E": "irons_spellbooks:arcane_essence"
+      }
+    },
+    {
+      "id": "arcane_solution",
+      "process": "mixing_or_alchemist_cauldron",
+      "inputs": [
+        {
+          "fluid": "minecraft:water",
+          "amount_mb": 250
+        },
+        {
+          "item": "irons_spellbooks:arcane_essence",
+          "count": 1
+        }
+      ],
+      "output": {
+        "fluid": "arcane_industry:arcane_solution",
+        "amount_mb": 250
+      },
+      "note": "",
+      "status": "retain_implemented"
+    },
+    {
+      "id": "crimson_solution_from_blue",
+      "process": "mixing",
+      "inputs": [
+        {
+          "fluid": "arcane_industry:arcane_solution",
+          "amount_mb": 250
+        },
+        {
+          "fluid": "irons_spellbooks:blood",
+          "amount_mb": 250
+        }
+      ],
+      "output": {
+        "fluid": "arcane_industry:crimson_solution",
+        "amount_mb": 250
+      },
+      "note": "",
+      "status": "retain_implemented"
+    },
+    {
+      "id": "crimson_solution_from_essence",
+      "process": "mixing_or_alchemist_cauldron",
+      "inputs": [
+        {
+          "fluid": "irons_spellbooks:blood",
+          "amount_mb": 250
+        },
+        {
+          "item": "irons_spellbooks:arcane_essence",
+          "count": 1
+        }
+      ],
+      "output": {
+        "fluid": "arcane_industry:crimson_solution",
+        "amount_mb": 250
+      },
+      "note": "",
+      "status": "retain_implemented"
+    },
+    {
+      "id": "crimson_bottle_manual",
+      "process": "crafting_shapeless",
+      "inputs": [
+        {
+          "item": "irons_spellbooks:blood_vial",
+          "count": 1
+        },
+        {
+          "item": "irons_spellbooks:arcane_essence",
+          "count": 1
+        }
+      ],
+      "output": {
+        "item": "arcane_industry:crimson_solution_bottle",
+        "count": 1
+      },
+      "note": "瓶身留在成品，不额外返空瓶。",
+      "status": "retain_implemented"
+    },
+    {
+      "id": "ember_cake_base",
+      "process": "compacting",
+      "inputs": [
+        {
+          "item": "minecraft:egg",
+          "count": 1
+        },
+        {
+          "item": "minecraft:sugar",
+          "count": 1
+        },
+        {
+          "item": "irons_spellbooks:cinder_essence",
+          "count": 1
+        }
+      ],
+      "output": {
+        "item": "arcane_industry:ember_cake_base",
+        "count": 1
+      },
+      "note": "旧独立辊压配方已删除。现在鸡蛋依次经机械手加糖、机械手加灰烬源质和辊压，形成原生Step3过渡物。",
+      "status": "superseded_by_native_sequence"
+    },
+    {
+      "id": "ember_cake",
+      "process": "filling",
+      "inputs": [
+        {
+          "item": "arcane_industry:ember_cake_base",
+          "count": 1
+        },
+        {
+          "fluid": "arcane_industry:crimson_solution",
+          "amount_mb": 1000
+        }
+      ],
+      "output": {
+        "item": "arcane_industry:ember_cake",
+        "count": 1
+      },
+      "note": "仅接收原生蛋糕序列Step3过渡物，不再有独立裸蛋糕坯注液配方。",
+      "status": "native_sequence_final_step"
+    },
+    {
+      "id": "common_ink",
+      "process": "mixing",
+      "inputs": [
+        {
+          "fluid": "arcane_industry:arcane_solution",
+          "amount_mb": 250
+        },
+        {
+          "item": "minecraft:ink_sac",
+          "count": 1
+        }
+      ],
+      "output": {
+        "fluid": "irons_spellbooks:common_ink",
+        "amount_mb": 250
+      },
+      "note": "",
+      "status": "retain_implemented"
+    },
+    {
+      "id": "uncommon_ink",
+      "process": "mixing",
+      "inputs": [
+        {
+          "fluid": "irons_spellbooks:common_ink",
+          "amount_mb": 1000
+        },
+        {
+          "item": "minecraft:copper_ingot",
+          "count": 1
+        }
+      ],
+      "output": {
+        "fluid": "irons_spellbooks:uncommon_ink",
+        "amount_mb": 250
+      },
+      "note": "与原生4:1墨水升阶保持一致；实际矿物采用forge标签。",
+      "status": "retain_implemented"
+    },
+    {
+      "id": "rare_ink",
+      "process": "mixing",
+      "inputs": [
+        {
+          "fluid": "irons_spellbooks:uncommon_ink",
+          "amount_mb": 1000
+        },
+        {
+          "item": "minecraft:iron_ingot",
+          "count": 1
+        }
+      ],
+      "output": {
+        "fluid": "irons_spellbooks:rare_ink",
+        "amount_mb": 250
+      },
+      "note": "与原生4:1墨水升阶保持一致；实际矿物采用forge标签。",
+      "status": "retain_implemented"
+    },
+    {
+      "id": "epic_ink",
+      "process": "mixing",
+      "inputs": [
+        {
+          "fluid": "irons_spellbooks:rare_ink",
+          "amount_mb": 1000
+        },
+        {
+          "item": "minecraft:gold_ingot",
+          "count": 1
+        }
+      ],
+      "output": {
+        "fluid": "irons_spellbooks:epic_ink",
+        "amount_mb": 250
+      },
+      "note": "与原生4:1墨水升阶保持一致；实际矿物采用forge标签。",
+      "status": "retain_implemented"
+    },
+    {
+      "id": "legendary_ink",
+      "process": "mixing",
+      "inputs": [
+        {
+          "fluid": "irons_spellbooks:epic_ink",
+          "amount_mb": 1000
+        },
+        {
+          "item": "minecraft:amethyst_shard",
+          "count": 1
+        }
+      ],
+      "output": {
+        "fluid": "irons_spellbooks:legendary_ink",
+        "amount_mb": 250
+      },
+      "note": "与原生4:1墨水升阶保持一致；实际矿物采用forge标签。",
+      "status": "retain_implemented"
+    },
+    {
+      "id": "arcane_bottle_fill",
+      "process": "filling",
+      "inputs": [
+        {
+          "item": "minecraft:glass_bottle",
+          "count": 1
+        },
+        {
+          "fluid": "arcane_industry:arcane_solution",
+          "amount_mb": 250
+        }
+      ],
+      "output": {
+        "item": "arcane_industry:arcane_solution_bottle",
+        "count": 1
+      },
+      "note": "",
+      "status": "retain_implemented"
+    },
+    {
+      "id": "arcane_bucket_fill",
+      "process": "filling",
+      "inputs": [
+        {
+          "item": "minecraft:bucket",
+          "count": 1
+        },
+        {
+          "fluid": "arcane_industry:arcane_solution",
+          "amount_mb": 1000
+        }
+      ],
+      "output": {
+        "item": "arcane_industry:arcane_solution_bucket",
+        "count": 1
+      },
+      "note": "",
+      "status": "retain_implemented"
+    },
+    {
+      "id": "arcane_bucket_craft",
+      "process": "crafting_shapeless",
+      "inputs": [
+        {
+          "item": "arcane_industry:arcane_solution_bottle",
+          "count": 4
+        },
+        {
+          "item": "minecraft:bucket",
+          "count": 1
+        }
+      ],
+      "output": {
+        "item": "arcane_industry:arcane_solution_bucket",
+        "count": 1
+      },
+      "note": "输入瓶返4个玻璃瓶；总液量守恒。",
+      "status": "retain_implemented"
+    },
+    {
+      "id": "arcane_bottles_craft",
+      "process": "crafting_shapeless",
+      "inputs": [
+        {
+          "item": "arcane_industry:arcane_solution_bucket",
+          "count": 1
+        },
+        {
+          "item": "minecraft:glass_bottle",
+          "count": 4
+        }
+      ],
+      "output": {
+        "item": "arcane_industry:arcane_solution_bottle",
+        "count": 4
+      },
+      "note": "输入桶返1个铁桶；总液量守恒。",
+      "status": "retain_implemented"
+    },
+    {
+      "id": "crimson_bottle_fill",
+      "process": "filling",
+      "inputs": [
+        {
+          "item": "minecraft:glass_bottle",
+          "count": 1
+        },
+        {
+          "fluid": "arcane_industry:crimson_solution",
+          "amount_mb": 250
+        }
+      ],
+      "output": {
+        "item": "arcane_industry:crimson_solution_bottle",
+        "count": 1
+      },
+      "note": "",
+      "status": "retain_implemented"
+    },
+    {
+      "id": "crimson_bucket_fill",
+      "process": "filling",
+      "inputs": [
+        {
+          "item": "minecraft:bucket",
+          "count": 1
+        },
+        {
+          "fluid": "arcane_industry:crimson_solution",
+          "amount_mb": 1000
+        }
+      ],
+      "output": {
+        "item": "arcane_industry:crimson_solution_bucket",
+        "count": 1
+      },
+      "note": "",
+      "status": "retain_implemented"
+    },
+    {
+      "id": "crimson_bucket_craft",
+      "process": "crafting_shapeless",
+      "inputs": [
+        {
+          "item": "arcane_industry:crimson_solution_bottle",
+          "count": 4
+        },
+        {
+          "item": "minecraft:bucket",
+          "count": 1
+        }
+      ],
+      "output": {
+        "item": "arcane_industry:crimson_solution_bucket",
+        "count": 1
+      },
+      "note": "输入瓶返4个玻璃瓶；总液量守恒。",
+      "status": "retain_implemented"
+    },
+    {
+      "id": "crimson_bottles_craft",
+      "process": "crafting_shapeless",
+      "inputs": [
+        {
+          "item": "arcane_industry:crimson_solution_bucket",
+          "count": 1
+        },
+        {
+          "item": "minecraft:glass_bottle",
+          "count": 4
+        }
+      ],
+      "output": {
+        "item": "arcane_industry:crimson_solution_bottle",
+        "count": 4
+      },
+      "note": "输入桶返1个铁桶；总液量守恒。",
+      "status": "retain_implemented"
+    },
+    {
+      "id": "spell_imprinting",
+      "process": "cei_printer",
+      "status": "native_sequence_step_1",
+      "inputs": [
+        {
+          "item": "irons_spellbooks:scroll",
+          "count": 1,
+          "constraint": "no_spell"
+        },
+        {
+          "fluid": "arcane_industry:arcane_solution",
+          "amount_mb": 50
+        }
+      ],
+      "catalyst": {
+        "item": "irons_spellbooks:scroll",
+        "constraint": "valid_native_spell_template",
+        "consumed": false
+      },
+      "output": {
+        "item": "arcane_industry:uninked_scroll",
+        "count": 1,
+        "payload": "spell_id_only"
+      }
+    },
+    {
+      "id": "spell_inking",
+      "process": "filling",
+      "status": "native_sequence_step_2",
+      "inputs": [
+        {
+          "item": "arcane_industry:uninked_scroll",
+          "count": 1,
+          "constraint": "valid_spell_id"
+        },
+        {
+          "fluid": "irons_spellbooks:common_ink",
+          "amount_mb": 250
+        }
+      ],
+      "output": {
+        "item": "irons_spellbooks:scroll",
+        "count": 1,
+        "level": 1,
+        "spell": "from_imprinted_payload"
+      }
+    }
+  ],
+  "constraints": [
+    "升华室和补给升级的材料合成修改仍是审核草案；升华模板已应用用户指定的金板、紫水晶、铜板与烈焰人升级锻造模板九宫格配方。",
+    "卷轴打印、逐级升华与余烬蛋糕已按用户明确要求采用原生Create序列组装，loops=1。",
+    "不改既定升级费用、猩红四倍升华效率、Max+3、每级超越蛋糕与墨水用量。",
+    "墨水复用5种原生流体和瓶，不新增墨水桶。"
+  ],
+  "review_notes": [
+    "灰烬源质是原生远古骑士掉落，继续作为超越的探索门槛。",
+    "升华室内1红=4蓝换液保留；普通搅拌配方不提供直接的4蓝→1红逆向浓缩，猩红生产线用血强化。",
+    "两种原液依照用户设定可在足量大液池中由机械动力无限抽取；超越仍要灰烬蛋糕和传说墨水。",
+    "猩红生产用血强化、1红=4蓝的约定保留；因此加血路线也能得到更多蓝液等效量，属于已批准转换的结果。",
+    "满级10的三级超越直接扣937.5mB红液，另3蛋糕预制共3000mB红液；合计3937.5mB红液、3灰烬源质、3鸡蛋、3糖及3瓶传说墨水。"
+  ],
+  "safeguards": [
+    {
+      "status": "implemented",
+      "id": "no_printed_scroll_ink_recycling",
+      "rule": "打印出的卷轴保留来源标记，禁止通过炼金锅回收墨水；涉及其他卷轴变换时也要核对来源标记。",
+      "reason": "原生炼金锅有50%卷轴回收概率；若复制只用纸和少量原液，可绕过整条墨水浓缩链。"
+    },
+    {
+      "status": "retain_implemented",
+      "id": "no_overcap_printing",
+      "rule": "超过该法术原生等级上限的卷轴不能作为打印样板。"
+    }
+  ],
+  "authorized_native_sequences": [
+    {
+      "id": "arcane_industry:sequenced_assembly/printed_scroll",
+      "type": "create:sequenced_assembly",
+      "loops": 1,
+      "input": "native blank scroll",
+      "transition": "arcane_industry:uninked_scroll",
+      "steps": [
+        "CEI printing + 50mB arcane (spell template retained)",
+        "spout + 250mB common ink"
+      ],
+      "output": "native level 1 scroll of template spell"
+    },
+    {
+      "id": "arcane_industry:sequenced_assembly/ember_cake",
+      "type": "create:sequenced_assembly",
+      "loops": 1,
+      "input": "forge:eggs x1",
+      "transition": "arcane_industry:ember_cake_base",
+      "steps": [
+        "deploy sugar x1",
+        "deploy cinder_essence x1",
+        "press",
+        "spout +1000mB crimson"
+      ],
+      "output": "ember cake x1"
+    },
+    {
+      "id": "arcane_industry:sequenced_assembly/scroll_ascension",
+      "type": "create:sequenced_assembly",
+      "loops": 1,
+      "input": "valid native spell scroll below native Max+3",
+      "transition": "arcane_industry:unfinished_ascension_scroll",
+      "steps": [
+        "spout +250mB target-rarity ink",
+        "ascension chamber + existing exact solution fee, reusable template, one cake per over-native-Max upgrade and an exposed lightning rod environment"
+      ],
+      "output": "same spell +1 level, preserving original scroll NBT",
+      "compatibility": "raw-scroll manual/basin routes run both native steps atomically; pre-inked stage pays no second ink"
+    }
+  ],
+  "authorized_cosmetics_and_transcendence": {
+    "skins": {
+      "create:brass_ingot": "brass",
+      "irons_spellbooks:mithril_ingot": "mithril",
+      "minecraft:copper_ingot": "copper"
+    },
+    "same_skin_consumption": 0,
+    "survival_change_ingots": 1,
+    "decorations": [
+      "create:goggles",
+      "irons_spellbooks:tarnished_helmet"
+    ],
+    "remove": "shift-right-click while holding the same kind of decoration",
+    "terms": {
+      "crimson_working_state": "突破状态",
+      "over_native_max_upgrade": "超越升级"
+    },
+    "lightning": "CEI native BlazeLightningHelper before each over-native-Max commit; valid exposed highest-surface rod within128 redirects a real bolt; missing rod kills the blaze without consuming recipe materials",
+    "restore": "transfer one filled Create blaze burner into the empty chamber, returning an empty carrier in survival",
+    "jei_upgrade_category": "arcane_industry:scroll_ascension with Create native sequenced assembly layout"
+  },
+  "authorized_residual_fire": {
+    "living_blaze": true,
+    "death_state": "empty chamber with decorative residual fire",
+    "light_levels": {
+      "empty_burning": 12,
+      "empty_extinguished": 0
+    },
+    "extinguish": [
+      "empty-hand left click without mining",
+      "shovel right click or native Create extinguish tool"
+    ],
+    "ignite": "flint and steel right click",
+    "processing_for_either_empty_state": false,
+    "portable_state": [
+      "skin",
+      "blaze death",
+      "residual fire",
+      "delayed lightning fire cleanup grace"
+    ],
+    "legacy_migration": "an old dead cage with an external fire immediately above absorbs that fire on its first server tick",
+    "late_lightning": "does not reignite an explicitly extinguished residual fire; only the machine top is cleaned, adjacent natural fire is preserved"
+  }
+}

@@ -24,6 +24,23 @@ java {
     withSourcesJar()
 }
 
+// The acceptance contracts deliberately compile only dependency-free production
+// helpers. A fresh clone does not need the ignored WebGL history or a game install.
+sourceSets {
+    releaseVerification {
+        java {
+            srcDirs = ['src/main/java', 'tools']
+            include 'dev/expedition/arcane/client/ScrollRevealMotion.java'
+            include 'dev/expedition/arcane/client/ChamberItemMotion.java'
+            include 'dev/expedition/arcane/client/ChamberResearchSoundPlan.java'
+            include 'dev/expedition/arcane/chamber/ResearchLottery.java'
+            include 'VerifyChamberSounds.java'
+            include 'VerifyReleaseInvariants.java'
+        }
+        resources.srcDirs = []
+    }
+}
+
 minecraft {
     mappings channel: 'official', version: minecraft_version
     copyIdeResources = true
@@ -80,7 +97,7 @@ dependencies {
     minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
     // 0.8.5's AP crashes on dependency field descriptors (TypeHandleASM).
     // 0.8.7 fixes the build-time processor; Forge's runtime Mixin stays untouched.
-    annotationProcessor 'org.spongepowered:mixin:0.8.7:processor'
+    annotationProcessor 'org.spongepowered:mixin:0.8.7:processor' 
 
     implementation(fg.deobf("com.simibubi.create:create-${minecraft_version}:${create_version}:slim")) { transitive = false }
     implementation(fg.deobf("net.createmod.ponder:Ponder-Forge-${minecraft_version}:${ponder_version}")) { transitive = false }
@@ -120,8 +137,7 @@ tasks.named('processResources', ProcessResources).configure {
     }
 }
 
-tasks.named('jar', Jar).configure {
-    manifest.attributes([
+def releaseManifest = [
             'Specification-Title': 'Create: Arcane Crafts',
             'Specification-Vendor': 'Eldershi',
             'Specification-Version': '1',
@@ -129,31 +145,131 @@ tasks.named('jar', Jar).configure {
             'Implementation-Version': project.version,
             'Implementation-Vendor': 'Eldershi',
             'MixinConfigs': 'arcane_industry.mixins.json'
-    ])
+]
+def prototypeClasses = [
+        'dev/expedition/arcane/testing/**',
+        'dev/expedition/arcane/chamber/ChamberTests*',
+        'dev/expedition/arcane/chamber/ResearchPresentationTests*',
+        'dev/expedition/arcane/chamber/ResearchVisualFixture*',
+        'dev/expedition/arcane/client/PrototypeScreenshotRequests*',
+        'dev/expedition/arcane/client/jei/PrototypeJeiRequests*',
+        'dev/expedition/arcane/client/jei/JeiPrototypeVerification*',
+        'dev/expedition/arcane/client/jei/NativeAssemblyDisplayNetworkTests*'
+]
+tasks.withType(Jar).configureEach {
+    preserveFileTimestamps = false
+    reproducibleFileOrder = true
+    from('LICENSES') { into 'LICENSES' }
+}
+tasks.named('jar', Jar).configure {
+    manifest.attributes(releaseManifest)
+    prototypeClasses.each { exclude it }
     finalizedBy 'reobfJar'
+}
+
+// Explicitly requested development artifact; normal build publishes only the
+// production JAR and its sources. Never install both JARs in the same instance.
+tasks.register('prototypeJar', Jar) {
+    group = 'build'
+    description = 'Builds an opt-in QA JAR with prototype commands and screenshot fixtures.'
+    archiveClassifier = 'prototype'
+    from sourceSets.main.output
+    manifest.attributes(releaseManifest)
+    finalizedBy 'reobfPrototypeJar'
+}
+reobf { prototypeJar {} }
+
+tasks.register('verifyReleaseInvariants', JavaExec) {
+    group = 'verification'
+    description = 'Checks timing, C2 motion, quaternions, research lottery and sound replay without Minecraft.'
+    dependsOn tasks.named('releaseVerificationClasses')
+    classpath = sourceSets.releaseVerification.runtimeClasspath
+    mainClass = 'dev.expedition.arcane.client.VerifyReleaseInvariants'
+    args layout.buildDirectory.file('reports/release-invariants.json').get().asFile.absolutePath
 }
 
 tasks.register('verifyReleaseJar') {
     group = 'verification'
-    description = 'Checks that the reobfuscated release contains the Mixin config and generated refmap.'
+    description = 'Checks production mappings, metadata, licenses, resource boundaries and absence of QA/dependency payloads.'
     dependsOn 'reobfJar'
     doLast {
         File artifact = tasks.named('jar', Jar).get().archiveFile.get().asFile
+        def checked = []
+        def require = { boolean valid, String contract ->
+            if (!valid) throw new GradleException(contract)
+            checked.add(contract)
+        }
         new java.util.jar.JarFile(artifact).withCloseable { jar ->
-            if (jar.manifest.mainAttributes.getValue('MixinConfigs') != 'arcane_industry.mixins.json') {
-                throw new GradleException('Release JAR is missing its MixinConfigs manifest entry')
-            }
+            def names = jar.entries().collect { it.name }
+            require(jar.manifest.mainAttributes.getValue('MixinConfigs') == 'arcane_industry.mixins.json',
+                    'Release JAR declares its MixinConfigs manifest entry')
+            require(jar.manifest.mainAttributes.getValue('Implementation-Version') == project.version.toString(),
+                    'Manifest implementation version matches Gradle version')
             ['arcane_industry.mixins.json', 'arcane_industry.refmap.json'].each { entry ->
-                if (jar.getEntry(entry) == null) throw new GradleException("Release JAR is missing ${entry}")
+                require(jar.getEntry(entry) != null, "Release JAR contains ${entry}")
             }
             // This class calls a vanilla override through the upstream menu.
             // Its production invocation must use SRG after reobfJar.
             def bridge = jar.getEntry('dev/expedition/arcane/compat/NativeAnvilBridge$SnapshotMenu.class')
-            if (bridge == null || !new String(jar.getInputStream(bridge).bytes,
-                    java.nio.charset.StandardCharsets.ISO_8859_1).contains('m_6640_')) {
-                throw new GradleException('Release bridge was not reobfuscated to the production createResult name')
+            require(bridge != null && new String(jar.getInputStream(bridge).bytes,
+                    java.nio.charset.StandardCharsets.ISO_8859_1).contains('m_6640_'),
+                    'Native anvil bridge uses the reobfuscated production createResult name')
+            def readText = { String entry ->
+                require(jar.getEntry(entry) != null, "Release JAR contains ${entry}")
+                jar.getInputStream(jar.getEntry(entry)).getText('UTF-8')
             }
+            def toml = readText('META-INF/mods.toml')
+            def modVersion = toml =~ /(?m)^version\s*=\s*"([^"]+)"/
+            require(modVersion.find() && modVersion.group(1) == project.version.toString(),
+                    'mods.toml version matches Gradle version')
+            require(toml.contains('modId="arcane_industry"'), 'Stable save namespace is arcane_industry')
+            def mixins = new JsonSlurper().parseText(readText('arcane_industry.mixins.json'))
+            require(mixins.refmap == 'arcane_industry.refmap.json', 'Mixin configuration names the generated refmap')
+            ((mixins.mixins ?: []) + (mixins.client ?: [])).each { name ->
+                require(names.contains("${mixins.package}.${name}".replace('.', '/') + '.class'),
+                        "Mixin target class is packaged: ${name}")
+            }
+            // Catch damaged or accidentally copied development JSON in resources.
+            names.findAll { it.endsWith('.json') }.each { entry ->
+                new JsonSlurper().parseText(jar.getInputStream(jar.getEntry(entry)).getText('UTF-8'))
+            }
+            checked.add('Every packaged JSON resource parses')
+            ['LICENSE.md', 'THIRD_PARTY_NOTICES.md'].each { entry ->
+                require(readText(entry) == file(entry).getText('UTF-8'), "Packaged ${entry} matches the maintained notice")
+            }
+            fileTree('LICENSES').files.each { source ->
+                String entry = 'LICENSES/' + file('LICENSES').toPath().relativize(source.toPath()).toString().replace('\\', '/')
+                require(jar.getEntry(entry) != null && Arrays.equals(source.bytes, jar.getInputStream(jar.getEntry(entry)).bytes),
+                        "Packaged upstream license matches ${entry}")
+            }
+            def originals = [
+                    'block/casing.png', 'block/core_idle.png', 'block/core_active.png', 'block/core_super.png',
+                    'entity/chamber/arcane_runes_active.png', 'entity/chamber/arcane_runes_active_s.png',
+                    'entity/chamber/arcane_runes_super.png', 'entity/chamber/arcane_runes_super_s.png'
+            ].collect { 'assets/arcane_industry/textures/' + it }.toSet()
+            require(names.findAll { it.endsWith('.png') }.toSet() == originals,
+                    'Exactly the eight original PNG textures are distributed')
+            require(!names.any { it ==~ /(?i).+\.(jar|ogg|wav|mp3|mp4|zip|nbt|mca|mcr|db|sqlite)/ },
+                    'No nested dependency, copied audio, world or account payload is distributed')
+            require(!names.any { it ==~ /(?i)(art|instance|run|testing|outputs|work|\.git|\.gradle|\.aws|\.codex)\/.*/ },
+                    'No local development directories are distributed')
+            require(!names.any { it.endsWith('.class') && !it.startsWith('dev/expedition/arcane/') },
+                    'All packaged classes belong to this addon')
+            def qaPaths = names.findAll { name ->
+                prototypeClasses.any { pattern ->
+                    org.apache.tools.ant.types.selectors.SelectorUtils.matchPath(pattern, name)
+                }
+            }
+            require(qaPaths.isEmpty(), 'Production JAR excludes QA commands, test suites and screenshot fixtures')
         }
+        def sha256 = java.security.MessageDigest.getInstance('SHA-256').digest(artifact.bytes).encodeHex().toString()
+        File report = layout.buildDirectory.file('reports/release-jar.json').get().asFile
+        report.parentFile.mkdirs()
+        report.setText(JsonOutput.prettyPrint(JsonOutput.toJson([
+                status: 'PASS', artifact: artifact.name, version: project.version.toString(),
+                sha256: sha256, sizeBytes: artifact.length(), checks: checked
+        ])) + '\n', 'UTF-8')
+        logger.lifecycle("Production JAR acceptance: ${checked.size()} checks passed; SHA-256 ${sha256}")
     }
 }
-tasks.named('check').configure { dependsOn 'verifyReleaseJar' }
+tasks.named('check').configure { dependsOn 'verifyReleaseInvariants', 'verifyReleaseJar' }

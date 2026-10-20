@@ -12,6 +12,7 @@ import com.mojang.math.Axis;
 import dev.expedition.arcane.ArcaneIndustry;
 import dev.expedition.arcane.chamber.AscensionChamberBlock;
 import dev.expedition.arcane.chamber.AscensionChamberBlockEntity;
+import dev.expedition.arcane.chamber.ManualUpgradeRecipes;
 import net.createmod.catnip.animation.LerpedFloat;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.geom.ModelLayerLocation;
@@ -25,6 +26,7 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
+import org.joml.Quaternionf;
 
 import java.util.Map;
 import java.util.WeakHashMap;
@@ -37,7 +39,10 @@ public final class AscensionChamberRenderer implements BlockEntityRenderer<Ascen
     private final ChamberVisuals visuals = new ChamberVisuals();
     private final ItemRenderer itemRenderer;
     private final AnimatedSpellBook books = new AnimatedSpellBook();
+    private final ChamberScrollRevealRenderer scrolls = new ChamberScrollRevealRenderer();
     private final Map<AscensionChamberBlockEntity, BasinPose> basinPoses = new WeakHashMap<>();
+    private final Map<AscensionChamberBlockEntity, ResearchRig> researchRigs = new WeakHashMap<>();
+    private final Map<AscensionChamberBlockEntity, Quaternionf[]> completionTargets = new WeakHashMap<>();
 
     public AscensionChamberRenderer(BlockEntityRendererProvider.Context context) {
         itemRenderer = context.getItemRenderer();
@@ -67,7 +72,8 @@ public final class AscensionChamberRenderer implements BlockEntityRenderer<Ascen
         float renderTick = time + (chamber.hashCode() % 13) * 16.0F;
         float q = renderTick / 16.0F;
         BasinPose movement = basinPoses.computeIfAbsent(chamber, unused -> new BasinPose());
-        boolean manualWork = !chamber.isBasinMode() && chamber.isManualProcessing();
+        boolean manualWork = !chamber.isBasinMode() && chamber.isManualProcessing()
+                && (!chamber.isResearchProcessing() || researchTick(chamber, renderTime) < ScrollRevealMotion.WORK_END);
         float animation = movement.value(chamber, partialTicks, state > 0 && (chamber.hasWorkBlockAbove() || manualWork)) * .175F;
         float offset = Mth.sin((float) (q % (Math.PI * 2))) / (state == 0 ? 16 : 64);
         pose.pushPose();
@@ -133,6 +139,11 @@ public final class AscensionChamberRenderer implements BlockEntityRenderer<Ascen
     private void renderManual(AscensionChamberBlockEntity chamber, double now, PoseStack pose,
                               MultiBufferSource buffers, int light, int overlay) {
         var presentation = ChamberManualClient.state(chamber);
+        if (chamber.hasResearchPresentation()) {
+            renderResearch(chamber, now, pose, buffers, light, overlay);
+            return;
+        }
+        researchRigs.remove(chamber);
         ItemStack primary = chamber.getManualPrimary();
         if (primary.isEmpty()) return;
         ItemStack secondary = chamber.getManualSecondary();
@@ -142,29 +153,28 @@ public final class AscensionChamberRenderer implements BlockEntityRenderer<Ascen
         double elapsed = working ? Math.max(0, (now - chamber.getManualStartedAt()) / 20)
                 : done ? ChamberManualClient.WORK_SECONDS + Math.max(0, (now - chamber.getManualCompletedAt()) / 20) : 0;
         double doneAge = done ? Math.max(0, (now - chamber.getManualCompletedAt()) / 20) : 0;
-        float lift = done ? 1 : working ? ChamberManualClient.ease(elapsed / .75) : 0;
+        boolean operation = !ManualUpgradeRecipes.BOOK_SPELL_UPGRADE.equals(chamber.getManualOperation());
+        var motion = ChamberItemMotion.pose(done ? doneAge : elapsed, now / 20, done, operation);
+        if (!done) completionTargets.remove(chamber);
         float yaw = 0;
         var player = Minecraft.getInstance().player;
         if (player != null) yaw = (float) Math.atan2(player.getX() - chamber.getBlockPos().getX() - .5,
                 player.getZ() - chamber.getBlockPos().getZ() - .5);
         var bookPose = presentation.sample(now);
         boolean isBook = books.supports(primary);
-        double y = 1.12 - .04 * ChamberManualClient.ease(bookPose.open()) - bookPose.impact() * .008;
-        if (working || done) {
-            y = isBook ? 1.12 + .16 * lift + .04 * Math.sin(elapsed * 2) * lift
-                    : done ? 1.28 + .08 * Math.sin(ChamberManualClient.WORK_SECONDS)
-                            * (1 - ChamberManualClient.ease(doneAge / .35))
-                    : 1.12 + .16 * lift + .08 * Math.sin(elapsed) * lift;
-        }
+        double y = working || done ? motion.vertical().y() : 1.12
+                - .04 * ChamberManualClient.ease(bookPose.open()) - bookPose.impact() * .008
+                + ChamberItemMotion.idle(now / 20).y();
         // Keep native two-item spacing until consumption; only a two-to-one result recentres.
         double horizontal = partner ? -.40 : done && presentation.hadPartner
                 ? -.40 * (1 - ChamberManualClient.ease(doneAge / .85)) : 0;
-        renderManualItem(primary, isBook, horizontal, y, yaw, elapsed, working || done, 0,
+        renderManualItem(primary, isBook, horizontal, y, yaw, motion, working || done, 0,
                 bookPose, pose, buffers, light, overlay, chamber);
         if (partner) {
-            double secondaryY = working ? 1.12 + .16 * lift + .08 * Math.sin(elapsed + Math.PI) * lift
-                    : done ? 1.44 : 1.12;
-            renderManualItem(secondary, books.supports(secondary), .40, secondaryY, yaw, elapsed,
+            double secondaryY = working ? ChamberItemMotion.processing(elapsed, operation, true).y()
+                    : done ? ChamberItemMotion.completed(doneAge, now / 20, operation, true).y()
+                    : 1.12 + ChamberItemMotion.idle(now / 20, ChamberItemMotion.SECONDARY_PHASE).y();
+            renderManualItem(secondary, books.supports(secondary), .40, secondaryY, yaw, motion,
                     working || done, 1, bookPose, pose, buffers, light, overlay, chamber);
         }
         if (working) {
@@ -176,13 +186,13 @@ public final class AscensionChamberRenderer implements BlockEntityRenderer<Ascen
     }
 
     private void renderManualItem(ItemStack stack, boolean book, double horizontal, double y, float yaw,
-                                  double elapsed, boolean moving, int index, ChamberManualClient.Pose bookPose,
+                                  ChamberItemMotion.Pose motion, boolean moving, int index, ChamberManualClient.Pose bookPose,
                                   PoseStack pose, MultiBufferSource buffers, int light, int overlay,
                                   AscensionChamberBlockEntity chamber) {
         pose.pushPose();
         pose.translate(.5 + Math.cos(yaw) * horizontal, y, .5 - Math.sin(yaw) * horizontal);
-        if (moving) {
-            float turn = (float) (elapsed * Math.PI / 180 * 100 + index * Math.PI);
+        if (moving && book && !motion.settled()) {
+            float turn = (float) (motion.angular().y() + index * Math.PI);
             pose.mulPose(Axis.XP.rotation(turn));
             pose.mulPose(Axis.ZP.rotation(turn));
         }
@@ -191,14 +201,64 @@ public final class AscensionChamberRenderer implements BlockEntityRenderer<Ascen
             pose.mulPose(Axis.ZP.rotationDegrees(100 + bookPose.impact() * .7F));
             books.render(stack, bookPose.open(), bookPose.page1(), bookPose.page2(), pose, buffers, light, overlay);
         } else {
-            if (moving) pose.mulPose(Axis.YP.rotation(Mth.PI));
-            else pose.mulPose(Minecraft.getInstance().gameRenderer.getMainCamera().rotation());
+            Quaternionf camera = new Quaternionf(Minecraft.getInstance().gameRenderer.getMainCamera().rotation());
+            if (moving) {
+                var target = quaternion(camera);
+                if (motion.completed()) {
+                    Quaternionf[] targets = completionTargets.computeIfAbsent(chamber, unused -> new Quaternionf[2]);
+                    if (targets[index] == null) target = ChamberItemMotion.initialCompletionTarget(index, target);
+                    else target = target.hemisphere(quaternion(targets[index]));
+                    targets[index] = joml(target);
+                }
+                pose.mulPose(joml(ChamberItemMotion.itemQuaternion(motion, index, target)));
+            } else pose.mulPose(camera);
             float scale = itemScale(stack);
             pose.scale(scale, scale, scale);
             itemRenderer.renderStatic(stack, ItemDisplayContext.FIXED, light, overlay, pose, buffers,
                     chamber.getLevel(), chamber.getBlockPos().hashCode() + index);
         }
         pose.popPose();
+    }
+
+    private static double researchTick(AscensionChamberBlockEntity chamber, double now) {
+        return ScrollRevealMotion.logicalTick(chamber.getResearchVisualTicks(now));
+    }
+
+    private void renderResearch(AscensionChamberBlockEntity chamber, double now, PoseStack pose,
+                                MultiBufferSource buffers, int light, int overlay) {
+        completionTargets.remove(chamber);
+        ResearchRig rig = researchRigs.get(chamber);
+        if (rig == null || rig.seed != chamber.getResearchVisualSeed()) {
+            var player = Minecraft.getInstance().player;
+            float yaw = player == null ? 0 : (float) Math.atan2(player.getX() - chamber.getBlockPos().getX() - .5,
+                    player.getZ() - chamber.getBlockPos().getZ() - .5);
+            rig = new ResearchRig(chamber.getResearchVisualSeed(), yaw);
+            researchRigs.put(chamber, rig);
+        }
+        double tick = researchTick(chamber, now);
+        Quaternionf rest = Axis.YP.rotation(-rig.yaw).mul(
+                new Quaternionf(Minecraft.getInstance().gameRenderer.getMainCamera().rotation()))
+                .mul(Axis.YP.rotation(Mth.PI));
+        pose.pushPose();
+        pose.translate(.5, 0, .5);
+        pose.mulPose(Axis.YP.rotation(rig.yaw));
+        scrolls.render(chamber, tick, now / 20, pose, buffers, light, overlay,
+                chamber.getResearchPrimary(), chamber.getResearchSecondary(), chamber.getResearchOutput(),
+                chamber.isResearchCrimson(), chamber.getResearchRarity(), rig.seed, rest);
+        pose.popPose();
+        double workClock = tick / ScrollRevealMotion.WORK_END * ChamberManualClient.WORK_SECONDS;
+        double alpha = ScrollRevealMotion.ease(workClock / .16)
+                * ScrollRevealMotion.ease((ChamberManualClient.WORK_SECONDS - workClock) / .28);
+        visuals.manualEffects(chamber.isResearchCrimson() ? "super" : "active", now, 1,
+                alpha, pose, buffers, overlay);
+    }
+
+    private record ResearchRig(long seed, float yaw) {}
+    private static ScrollRevealMotion.Quaternion quaternion(Quaternionf value) {
+        return new ScrollRevealMotion.Quaternion(value.x(), value.y(), value.z(), value.w());
+    }
+    private static Quaternionf joml(ScrollRevealMotion.Quaternion value) {
+        return new Quaternionf((float) value.x(), (float) value.y(), (float) value.z(), (float) value.w());
     }
 
     private static float itemScale(ItemStack stack) {

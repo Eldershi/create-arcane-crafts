@@ -1,17 +1,23 @@
 package dev.expedition.arcane.client;
 
 import dev.expedition.arcane.ArcaneIndustry;
+import dev.expedition.arcane.chamber.ManualUpgradeRecipes;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.sounds.AbstractTickableSoundInstance;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.core.BlockPos;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvent;
+import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
 import net.minecraftforge.registries.ForgeRegistries;
 
-/** One native sample per cue; the last second of the 70-tick operation is deliberately silent. */
+import java.util.ArrayList;
+import java.util.List;
+
+/** Native resource-pack sounds only: CEI operation cues and the approved research score. */
 final class ChamberManualSounds {
     private ChamberManualSounds() {}
 
@@ -24,37 +30,94 @@ final class ChamberManualSounds {
         return instance;
     }
 
-    static Work work(BlockPos pos, boolean superheated, int elapsedTicks) {
-        SoundEvent sound = ForgeRegistries.SOUND_EVENTS.getValue(ArcaneIndustry.id("work"));
-        if (sound == null) return null;
-        Work instance = new Work(sound, pos, superheated, elapsedTicks);
+    /** CEI 2.5.4b enchanter/forger completion events, category, volume and pitch range. */
+    static SimpleSoundInstance complete(String operation, BlockPos pos) {
+        SoundEvent event = completionEvent(operation);
+        RandomSource random = RandomSource.create();
+        SimpleSoundInstance instance = new SimpleSoundInstance(event, SoundSource.BLOCKS,
+                1, .9F + random.nextFloat() * .1F, random, pos);
         Minecraft.getInstance().getSoundManager().play(instance);
         return instance;
     }
 
-    static final class Work extends AbstractTickableSoundInstance {
-        private int age;
-        private int fade = -1;
-        private float fadeVolume;
-        Work(SoundEvent sound, BlockPos pos, boolean superheated, int elapsedTicks) {
-            super(sound, SoundSource.BLOCKS, RandomSource.create());
-            x = pos.getX() + .5; y = pos.getY() + 1.1; z = pos.getZ() + .5;
-            pitch = .8F * (superheated ? .94F : 1);
-            volume = 0;
-            age = elapsedTicks;
-            looping = false;
+    static SoundEvent completionEvent(String operation) {
+        return switch (operation) {
+            case ManualUpgradeRecipes.UNIQUE_SPELL_UPGRADE, ManualUpgradeRecipes.SPELL_IMBUE,
+                    ManualUpgradeRecipes.ORB_UPGRADE, ManualUpgradeRecipes.BOOK_SLOT_UPGRADE,
+                    ManualUpgradeRecipes.AFFINITY_BIND, ManualUpgradeRecipes.SHRIVING -> SoundEvents.ANVIL_USE;
+            default -> SoundEvents.ENCHANTMENT_TABLE_USE;
+        };
+    }
+
+    static Research research(BlockPos pos, boolean crimson) { return new Research(pos, crimson); }
+
+    /**
+     * A local cue cursor, driven by the same paid-work clock as the reveal. Never catches up
+     * old sounds when a chunk is first observed. All active tails belong to this session.
+     */
+    static final class Research {
+        private final BlockPos pos;
+        private final ChamberResearchSoundPlan.Cursor cueCursor;
+        private final List<Clip> voices = new ArrayList<>();
+        private double previousTicks = Double.NaN;
+        private boolean stopped;
+
+        Research(BlockPos pos, boolean crimson) {
+            this.pos = pos.immutable();
+            cueCursor = new ChamberResearchSoundPlan.Cursor(crimson);
         }
-        void fadeOut() { if (fade < 0) { fade = 0; fadeVolume = volume; } }
-        void end() { stop(); }
-        @Override public void tick() {
-            if (fade >= 0) {
-                volume = fadeVolume * (1 - Mth.clamp(++fade / 6F, 0, 1));
-                if (fade >= 6) stop();
-                return;
+
+        void update(double logicalTicks, int rarityOrdinal, boolean running) {
+            if (stopped || !Double.isFinite(logicalTicks)) return;
+            voices.removeIf(Clip::isStopped);
+            boolean active = running && Minecraft.getInstance().level != null;
+            if (!active || logicalTicks < previousTicks - .01) silence();
+            for (ChamberResearchSoundPlan.Cue cue : cueCursor.update(logicalTicks, rarityOrdinal, active)) {
+                SoundEvent event = ForgeRegistries.SOUND_EVENTS.getValue(new ResourceLocation(cue.event()));
+                if (event == null) continue;
+                Clip voice = new Clip(event, pos, cue);
+                voices.add(voice);
+                Minecraft.getInstance().getSoundManager().play(voice);
             }
-            ++age;
-            volume = .088F * Mth.clamp(age / 2.4F, 0, 1) * Mth.clamp((50 - age) / 5.6F, 0, 1);
-            if (age >= 50 || Minecraft.getInstance().level == null) stop();
+            previousTicks = logicalTicks;
+        }
+
+        void stop() { stopped = true; silence(); }
+
+        private void silence() {
+            var manager = Minecraft.getInstance().getSoundManager();
+            for (Clip voice : voices) { voice.end(); manager.stop(voice); }
+            voices.clear();
         }
     }
+
+    private static final class Clip extends AbstractTickableSoundInstance {
+        private final ChamberResearchSoundPlan.Cue cue;
+        private int age;
+
+        Clip(SoundEvent event, BlockPos pos, ChamberResearchSoundPlan.Cue cue) {
+            super(event, SoundSource.BLOCKS, RandomSource.create());
+            this.cue = cue;
+            x = pos.getX() + .5; y = pos.getY() + 1.1; z = pos.getZ() + .5;
+            pitch = cue.pitch();
+            volume = 0;
+            looping = false;
+        }
+
+        void end() { stop(); }
+
+        @Override public boolean canStartSilent() { return true; }
+
+        @Override public void tick() {
+            double seconds = ++age / 20.0;
+            if (seconds >= cue.duration() || Minecraft.getInstance().level == null) { stop(); return; }
+            volume = cue.gain() * smooth(seconds / cue.attack()) * smooth((cue.duration() - seconds) / cue.release());
+        }
+    }
+
+    private static float smooth(double value) {
+        float t = Mth.clamp((float) value, 0, 1);
+        return t * t * (3 - 2 * t);
+    }
+
 }

@@ -162,9 +162,7 @@ public final class ArcaneJeiPlugin implements IModPlugin {
                 .filter(recipe -> recipe.getId().equals(NativeAssemblyDisplays.PRINTING_ID)
                         || recipe.getId().equals(NativeAssemblyDisplays.ASCENSION_ID)).toList();
         runtime.getRecipeManager().hideRecipes(NATIVE_ASSEMBLY, genericAssemblies);
-        if (Boolean.getBoolean("arcane.prototype")) {
-            JeiPrototypeVerification.write(runtime, snapshot(), hidden, genericAssemblies.size());
-        }
+        DevelopmentJeiHooks.write(runtime, snapshot(), hidden, genericAssemblies.size());
     }
 
     /** A narrow client-thread entry point used only by the prototype review request hook. */

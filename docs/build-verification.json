@@ -1,4 +1,6 @@
 {
+  "scope": "Historical initial dependency-asset migration baseline, before r57 and scroll reveal integration; not the final 0.1.0 release artifact",
+  "finalReleaseVerification": "releases/0.1.0-verification.json",
   "minecraft": "1.20.1",
   "forge": "47.4.10",
   "java": 17,

@@ -65,6 +65,8 @@ public final class RuntimeAssetPack extends AbstractPackResources {
                 Source source = RuntimeAssetPack::readInstalled;
                 RuntimeTextureAssets.generate(source, result);
                 RuntimeModelAssets.generate(source, result);
+                RuntimeGrindstoneTextures.generate(source, result);
+                RuntimeGrindstoneModels.generate(source, result);
             } catch (IOException exception) {
                 throw new IllegalStateException("Cannot build Arcane Crafts materials from the installed dependency versions", exception);
             }

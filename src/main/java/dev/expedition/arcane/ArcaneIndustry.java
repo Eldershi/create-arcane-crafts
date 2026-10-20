@@ -4,7 +4,6 @@ import com.mojang.logging.LogUtils;
 import dev.expedition.arcane.compat.PrinterCompat;
 import dev.expedition.arcane.compat.ScrollInkingRecipe;
 import dev.expedition.arcane.compat.ScrollAscensionRecipes;
-import dev.expedition.arcane.testing.PrototypeTests;
 import dev.expedition.arcane.grinding.ArcaneGrindingContent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.fml.common.Mod;
@@ -27,7 +26,20 @@ public final class ArcaneIndustry {
         ScrollInkingRecipe.register(bus);
         ScrollAscensionRecipes.register(bus);
         PrinterCompat.register();
-        PrototypeTests.register();
+        registerDevelopmentHooks();
+    }
+
+    /** Optional prototype classes are deliberately absent from the production JAR. */
+    private static void registerDevelopmentHooks() {
+        if (!Boolean.getBoolean("arcane.prototype")) return;
+        try {
+            Class.forName("dev.expedition.arcane.testing.PrototypeTests")
+                    .getMethod("register").invoke(null);
+        } catch (ClassNotFoundException absent) {
+            LOGGER.info("Prototype checks are not included in this production build");
+        } catch (ReflectiveOperationException failure) {
+            throw new IllegalStateException("Could not register prototype checks", failure);
+        }
     }
 
     public static ResourceLocation id(String path) { return new ResourceLocation(MOD_ID, path); }

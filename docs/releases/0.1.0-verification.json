@@ -1,0 +1,277 @@
+{
+  "version": "0.1.0",
+  "date": "2026-10-20",
+  "sourceTag": "v0.1.0",
+  "environment": {
+    "minecraft": "1.20.1",
+    "forge": "47.4.10",
+    "java": 17,
+    "gradle": "8.8",
+    "forgeGradle": "6.0.42",
+    "localBuild": "macOS arm64; offline cache of pinned dependencies; standard Gradle tasks with isolated build directory"
+  },
+  "artifacts": {
+    "production": {
+      "name": "create-arcane-crafts-0.1.0.jar",
+      "sizeBytes": 651916,
+      "sha256": "689d4c024ef480ee792ac7dc1048b51d4629f48fa5620de76f8b9b2d2458cb24",
+      "publishedAsReleaseAsset": true
+    },
+    "sources": {
+      "name": "create-arcane-crafts-0.1.0-sources.jar",
+      "sizeBytes": 449401,
+      "sha256": "cc5bf5bb30ea8322e36c7bde6c4e5b8cbfd840a04dcdb527fee0fda83a6f0a5d",
+      "publishedAsReleaseAsset": true
+    },
+    "prototypeForAcceptanceOnly": {
+      "name": "create-arcane-crafts-0.1.0-prototype.jar",
+      "sizeBytes": 826368,
+      "sha256": "181f6c98ce824531614e4073646270cc429946765b87c20c36eab77f1a11cfed",
+      "publishedAsReleaseAsset": false
+    }
+  },
+  "automaticAcceptance": {
+    "standardGradleBuild": "PASS",
+    "tasks": [
+      "build",
+      "prototypeJar"
+    ],
+    "invariants": {
+      "status": "PASS",
+      "scope": "headless contracts; game rendering and transactions require in-game acceptance",
+      "checks": {
+        "authoritativeClock": 5161,
+        "idleAndC2Return": 3360,
+        "revealEnvelope": 6360,
+        "quaternionContinuity": 18072,
+        "researchLottery": 220,
+        "soundTimeline": 180
+      }
+    },
+    "additionalSoundAssertions": 288,
+    "jar": {
+      "status": "PASS",
+      "artifact": "create-arcane-crafts-0.1.0.jar",
+      "version": "0.1.0",
+      "sha256": "689d4c024ef480ee792ac7dc1048b51d4629f48fa5620de76f8b9b2d2458cb24",
+      "sizeBytes": 651916,
+      "checks": [
+        "Release JAR declares its MixinConfigs manifest entry",
+        "Manifest implementation version matches Gradle version",
+        "Release JAR contains arcane_industry.mixins.json",
+        "Release JAR contains arcane_industry.refmap.json",
+        "Native anvil bridge uses the reobfuscated production createResult name",
+        "Release JAR contains META-INF/mods.toml",
+        "mods.toml version matches Gradle version",
+        "Stable save namespace is arcane_industry",
+        "Release JAR contains arcane_industry.mixins.json",
+        "Mixin configuration names the generated refmap",
+        "Mixin target class is packaged: ArcaneAnvilMenuMixin",
+        "Mixin target class is packaged: ScrollForgeMenuMixin",
+        "Mixin target class is packaged: ScrollInkingSpoutMixin",
+        "Mixin target class is packaged: AscensionSpoutMixin",
+        "Mixin target class is packaged: PrintedScrollAssemblyMixin",
+        "Mixin target class is packaged: ScrollAscensionAssemblyMixin",
+        "Mixin target class is packaged: PrintedInscriptionMenuMixin",
+        "Mixin target class is packaged: PrintedInscriptionResultSlotMixin",
+        "Mixin target class is packaged: MechanicalMixerAscensionMixin",
+        "Mixin target class is packaged: AscensionBasinRecipeMixin",
+        "Mixin target class is packaged: GrindstoneDrainAccessor",
+        "Mixin target class is packaged: client.NativeInkFluidTypeAccessor",
+        "Every packaged JSON resource parses",
+        "Release JAR contains LICENSE.md",
+        "Packaged LICENSE.md matches the maintained notice",
+        "Release JAR contains THIRD_PARTY_NOTICES.md",
+        "Packaged THIRD_PARTY_NOTICES.md matches the maintained notice",
+        "Packaged upstream license matches LICENSES/sources.json",
+        "Packaged upstream license matches LICENSES/Create-Enchantment-Industry-2.5.4b-GPL-3.0.txt",
+        "Packaged upstream license matches LICENSES/Irons-Spells-n-Spellbooks-1.20.1-3.16.3-LICENSE.md",
+        "Packaged upstream license matches LICENSES/SOURCES.md",
+        "Packaged upstream license matches LICENSES/SophisticatedBackpacks-1.20.x-LICENSE.md",
+        "Packaged upstream license matches LICENSES/Create-6.0.8-LICENSE.md",
+        "Packaged upstream license matches LICENSES/MinecraftForge-1.20.x-LICENSE.txt",
+        "Packaged upstream license matches LICENSES/SophisticatedCore-1.20.x-LICENSE.md",
+        "Packaged upstream license matches LICENSES/Create-Enchantment-Industry-2.5.4b-LICENSE.txt",
+        "Packaged upstream license matches LICENSES/Create-Enchantment-Industry-2.5.4b-LGPL-3.0.txt",
+        "Exactly the eight original PNG textures are distributed",
+        "No nested dependency, copied audio, world or account payload is distributed",
+        "No local development directories are distributed",
+        "All packaged classes belong to this addon",
+        "Production JAR excludes QA commands, test suites and screenshot fixtures"
+      ]
+    },
+    "sharedProductionClasses": {
+      "status": "PASS",
+      "productionClasses": 197,
+      "byteDifferences": []
+    }
+  },
+  "currentRuntimeAcceptance": {
+    "schemaVersion": 1,
+    "version": "0.1.0",
+    "status": "PASS",
+    "recordedAt": "2026-10-20T00:01:49.581260+00:00",
+    "artifacts": [
+      {
+        "file": "create-arcane-crafts-0.1.0.jar",
+        "bytes": 651916,
+        "sha256": "689d4c024ef480ee792ac7dc1048b51d4629f48fa5620de76f8b9b2d2458cb24"
+      },
+      {
+        "file": "create-arcane-crafts-0.1.0-prototype.jar",
+        "bytes": 826368,
+        "sha256": "181f6c98ce824531614e4073646270cc429946765b87c20c36eab77f1a11cfed"
+      }
+    ],
+    "environment": {
+      "minecraft": "1.20.1",
+      "forge": "47.4.10",
+      "java": "17.0.20.1",
+      "architecture": "aarch64",
+      "create": "6.0.8",
+      "createEnchantmentIndustry": "2.5.4b",
+      "ironsSpellbooks": "1.20.1-3.16.3",
+      "jei": "15.59.0.212",
+      "shaderPackInstalled": false,
+      "graphicsMode": "Fancy",
+      "scope": "Isolated project instance and disposable flat server",
+      "serverBind": "127.0.0.1:25576",
+      "serverOnlineMode": false,
+      "arcanePrototypeProperty": true,
+      "launcherAccountsRead": false
+    },
+    "prototype": {
+      "status": "PASS",
+      "commandsSource": "server console; no operator changes",
+      "commands": [
+        "arcane_chamber_test",
+        "arcane_research_test",
+        "arcane_recipe_network_test"
+      ],
+      "chamberRegressionChecks": 47,
+      "research": {
+        "spell_config": {
+          "effective_max": 10,
+          "initial_max": 10,
+          "fixture": "irons_spellbooks:firebolt",
+          "default_max": 10
+        },
+        "arcane": {
+          "duration_ticks": 161,
+          "late_reload_at_tick": 160,
+          "output_ownership": "one pending -> one result -> one extraction",
+          "retained_focus_count": 3,
+          "physical_mb_paid_once": 500,
+          "pause_reload_at_tick": 90,
+          "status": "PASS"
+        },
+        "crimson": {
+          "duration_ticks": 161,
+          "late_reload_at_tick": 160,
+          "output_ownership": "one pending -> one result -> one extraction",
+          "retained_focus_count": 3,
+          "physical_mb_paid_once": 500,
+          "pause_reload_at_tick": 90,
+          "status": "PASS"
+        },
+        "status": "PASS"
+      },
+      "recipeNetwork": {
+        "status": "PASS",
+        "recipes": 3229,
+        "loginPacketBytes": 413143,
+        "sequenceStepsCompared": 17,
+        "directNativeInkFixtures": 5,
+        "emptyTag": "PASS",
+        "expandedTag": "PASS",
+        "foreignDirectFluid": "REJECTED",
+        "wrongAmount": "REJECTED"
+      },
+      "serverExitCode": 0
+    },
+    "production": {
+      "status": "PASS",
+      "serverStartup": true,
+      "serverOptionalQaAbsentHandled": true,
+      "clientOptionalQaAbsentHandled": true,
+      "clientJeiOptionalQaAbsentHandled": true,
+      "clientConnected": true,
+      "worldAndPlayerPresent": true,
+      "clientFps": 58,
+      "jeiAscensionViews": 1510,
+      "jeiPrintingAssemblyViews": 108,
+      "clientObservationError": "",
+      "nativeScreenshotCaptured": true,
+      "serverExitCode": 0,
+      "classLoadingErrors": 0
+    },
+    "knownDependencyMessages": [
+      "Iron Spellbooks crypt_loot and citadel_tomes loot-table JSON parse messages already present in the pre-release baseline",
+      "Optional Xaero and Iron Spellbooks template model warnings already present in the pre-release baseline"
+    ],
+    "cleanup": {
+      "operatorListUnchanged": true,
+      "operatorsAdded": 0,
+      "prototypeServerStopped": true,
+      "productionServerStopped": true,
+      "ownedClientStopped": true,
+      "temporaryObserverRemoved": true,
+      "temporaryObserverEnableMarkerRemoved": true,
+      "isolatedInstanceContainsProductionJar": true
+    },
+    "evidenceDirectory": "testing/release-0.1.0-20261020/",
+    "limits": [
+      "This release smoke check does not broaden the earlier Fancy shader-off visual coverage to Fabulous, third-party shaders, or complex glass/water transparency."
+    ]
+  },
+  "historicalVisualAcceptance": {
+    "artifactSha256": "c3586985895caa32f586f984c42229d13bb1804f2114a5ef128b413cf0f2d336",
+    "scope": "Integration build before QA exclusion; these screenshots are not labeled as the final production artifact",
+    "configuration": {
+      "graphics": "Fancy",
+      "flywheel": "instancing",
+      "shaderPack": false
+    },
+    "checks": [
+      "arcane/crimson and school colors",
+      "cube-to-cube variation and soft body noise",
+      "rare/epic/legendary distinction",
+      "complete reveal and return to idle",
+      "day/night",
+      "opaque wall occlusion",
+      "resource reload"
+    ],
+    "oracleComparison": {
+      "motionRows": 10508,
+      "motionValues": 71986,
+      "motionMaximumError": 4.89e-14,
+      "layoutValues": 8520,
+      "layoutMaximumError": 5.55e-17
+    },
+    "jeiNetworkDisplayClones": {
+      "printing": 108,
+      "ascension": 1510,
+      "mutationIsolation": "PASS",
+      "strictNbt": "PASS"
+    }
+  },
+  "continuousIntegration": {
+    "workflow": ".github/workflows/build.yml",
+    "command": "./gradlew --no-daemon --max-workers=2 clean build prototypeJar",
+    "resultLocation": "https://github.com/Eldershi/create-arcane-crafts/actions/workflows/build.yml",
+    "scope": "Independent clean-checkout build; use the run for sourceTag to read its actual result"
+  },
+  "notCovered": [
+    "Fabulous graphics",
+    "third-party shader packs",
+    "complex water/glass translucent ordering"
+  ],
+  "distribution": {
+    "originalPngCount": 8,
+    "embeddedDependencyJars": 0,
+    "copiedUpstreamAudio": 0,
+    "qaClassesInProductionJar": 0,
+    "localWorldsOrLauncherData": false,
+    "publicHistorySharesRestrictedLocalAncestors": false
+  }
+}

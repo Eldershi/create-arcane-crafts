@@ -1,7 +1,5 @@
 package dev.expedition.arcane.client.jei;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
 import com.simibubi.create.content.processing.recipe.ProcessingOutput;
 import com.simibubi.create.content.processing.recipe.ProcessingRecipe;
 import com.simibubi.create.content.processing.sequenced.SequencedAssemblyRecipe;
@@ -10,11 +8,15 @@ import com.simibubi.create.foundation.fluid.FluidIngredient;
 import dev.expedition.arcane.chamber.ScrollUpgradeRules;
 import dev.expedition.arcane.item.UnfinishedAscensionScrollItem;
 import dev.expedition.arcane.item.UninkedScrollItem;
+import io.netty.buffer.Unpooled;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.crafting.RecipeManager;
+import net.minecraftforge.common.crafting.CompoundIngredient;
 import net.minecraftforge.common.crafting.StrictNBTIngredient;
+import net.minecraftforge.registries.ForgeRegistries;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -30,8 +32,8 @@ final class NativeAssemblyDisplays {
     static final ResourceLocation ASCENSION_ID = ArcaneRecipeDisplays.id("sequenced_assembly/scroll_ascension");
     private static final String VIEW_PREFIX = "jei/sequenced_assembly/printed_scroll/";
     private static final String ASCENSION_VIEW_PREFIX = "jei/sequenced_assembly/scroll_ascension/";
-    private static final String PRINTING_STEP = "arcane_industry:assembly_scroll_printing";
-    private static final String INKING_STEP = "arcane_industry:scroll_inking";
+    private static final ResourceLocation PRINTING_STEP = ArcaneRecipeDisplays.id("assembly_scroll_printing");
+    private static final ResourceLocation INKING_STEP = ArcaneRecipeDisplays.id("scroll_inking");
     private static final Map<ProcessingRecipe<?>, ArcaneRecipeDisplays.Ascension> ASCENSION_STEPS =
             Collections.synchronizedMap(new WeakHashMap<>());
 
@@ -39,37 +41,29 @@ final class NativeAssemblyDisplays {
 
     static List<SequencedAssemblyRecipe> printing(RecipeManager manager, List<ArcaneRecipeDisplays.Printing> spells) {
         var actual = manager.byKey(PRINTING_ID).orElse(null);
-        if (!(actual instanceof SequencedAssemblyRecipe assembly)
-                || !(assembly.getSerializer() instanceof SequencedAssemblyRecipeSerializer serializer)) return List.of();
-        JsonObject source = new JsonObject();
-        serializer.write(source, assembly);
+        if (!(actual instanceof SequencedAssemblyRecipe assembly)) return List.of();
         List<SequencedAssemblyRecipe> views = new ArrayList<>();
         for (var spell : spells) {
             var target = UninkedScrollItem.readSpell(spell.uninked());
             if (target.isEmpty() || spell.samples().isEmpty()) continue;
-            JsonObject json = source.deepCopy();
+            ResourceLocation spellId = target.get().getSpellResource();
+            var structure = networkCopy(assembly, ArcaneRecipeDisplays.id(VIEW_PREFIX
+                    + spellId.getNamespace() + "/" + spellId.getPath()));
             boolean foundPrinter = false, foundInk = false;
-            for (var entry : json.getAsJsonArray("sequence")) {
-                JsonObject step = entry.getAsJsonObject();
-                String type = step.get("type").getAsString();
-                if (type.equals(PRINTING_STEP)) {
-                    JsonArray sampleAlternatives = new JsonArray();
-                    spell.samples().forEach(sample -> sampleAlternatives.add(StrictNBTIngredient.of(sample.copy()).toJson()));
-                    step.getAsJsonArray("ingredients").set(1, sampleAlternatives);
+            for (var entry : structure.getSequence()) {
+                var step = entry.getRecipe();
+                var type = ForgeRegistries.RECIPE_SERIALIZERS.getKey(step.getSerializer());
+                if (PRINTING_STEP.equals(type) && step.getIngredients().size() >= 2) {
+                    step.getIngredients().set(1, CompoundIngredient.of(spell.samples().stream()
+                            .map(sample -> StrictNBTIngredient.of(sample.copy())).toArray(Ingredient[]::new)));
                     foundPrinter = true;
-                } else if (type.equals(INKING_STEP)) {
+                } else if (INKING_STEP.equals(type) && step.getFluidIngredients().size() == 1) {
                     // The server assembly accepts the ink tag; this typed view shows only its real required tier.
-                    JsonArray ingredients = step.getAsJsonArray("ingredients");
-                    for (int index = 0; index < ingredients.size(); index++) {
-                        if (!FluidIngredient.isFluidIngredient(ingredients.get(index))) continue;
-                        ingredients.set(index, FluidIngredient.fromFluid(spell.inkFluid(), UninkedScrollItem.INK_AMOUNT).serialize());
-                        foundInk = true;
-                    }
+                    step.getFluidIngredients().set(0, FluidIngredient.fromFluid(spell.inkFluid(), UninkedScrollItem.INK_AMOUNT));
+                    foundInk = true;
                 }
             }
             if (!foundPrinter || !foundInk) continue;
-            ResourceLocation spellId = target.get().getSpellResource();
-            var structure = serializer.fromJson(ArcaneRecipeDisplays.id(VIEW_PREFIX + spellId.getNamespace() + "/" + spellId.getPath()), json);
             views.add(new SpellAssemblyView(structure, spell.uninked(), spell.finished()));
         }
         return List.copyOf(views);
@@ -82,32 +76,39 @@ final class NativeAssemblyDisplays {
 
     static List<SequencedAssemblyRecipe> ascension(RecipeManager manager, List<ArcaneRecipeDisplays.Ascension> upgrades) {
         var actual = manager.byKey(ASCENSION_ID).orElse(null);
-        if (!(actual instanceof SequencedAssemblyRecipe assembly)
-                || !(assembly.getSerializer() instanceof SequencedAssemblyRecipeSerializer serializer)) return List.of();
-        JsonObject source = new JsonObject();
-        serializer.write(source, assembly);
+        if (!(actual instanceof SequencedAssemblyRecipe assembly)) return List.of();
         List<SequencedAssemblyRecipe> views = new ArrayList<>();
         for (var display : upgrades) {
             var upgrade = display.upgrade();
             ItemStack transition = UnfinishedAscensionScrollItem.create(upgrade.input());
             if (transition.isEmpty()) continue;
-            JsonObject json = source.deepCopy();
-            JsonObject inking = json.getAsJsonArray("sequence").get(0).getAsJsonObject();
-            JsonArray ingredients = inking.getAsJsonArray("ingredients");
-            boolean replacedInk = false;
-            for (int index = 0; index < ingredients.size(); index++) {
-                if (!FluidIngredient.isFluidIngredient(ingredients.get(index))) continue;
-                ingredients.set(index, FluidIngredient.fromFluid(upgrade.inkFluid(), ScrollUpgradeRules.INK_AMOUNT).serialize());
-                replacedInk = true;
-            }
-            if (!replacedInk) continue;
             ResourceLocation viewId = ascensionViewId(display);
-            var structure = serializer.fromJson(viewId, json);
+            var structure = networkCopy(assembly, viewId);
+            if (structure.getSequence().isEmpty()) continue;
+            var inking = structure.getSequence().get(0).getRecipe().getFluidIngredients();
+            if (inking.size() != 1) continue;
+            inking.set(0, FluidIngredient.fromFluid(upgrade.inkFluid(), ScrollUpgradeRules.INK_AMOUNT));
             var view = new AscensionAssemblyView(structure, display, transition);
             view.getSequence().forEach(step -> ASCENSION_STEPS.put(step.getRecipe(), display));
             views.add(view);
         }
         return List.copyOf(views);
+    }
+
+    /**
+     * Create's client FluidTagIngredient keeps expanded stacks without a TagKey. Its JSON
+     * writer cannot serialize that representation; the native packet codec preserves it.
+     * Every view owns its mutable steps and ingredient lists, never the manager's recipes.
+     */
+    static SequencedAssemblyRecipe networkCopy(SequencedAssemblyRecipe source, ResourceLocation id) {
+        var serializer = (SequencedAssemblyRecipeSerializer) source.getSerializer();
+        FriendlyByteBuf buffer = new FriendlyByteBuf(Unpooled.buffer());
+        try {
+            serializer.toNetwork(buffer, source);
+            SequencedAssemblyRecipe copy = serializer.fromNetwork(id, buffer);
+            if (copy == null || buffer.isReadable()) throw new IllegalStateException("Incomplete native assembly clone: " + id);
+            return copy;
+        } finally { buffer.release(); }
     }
 
     static ResourceLocation ascensionViewId(ArcaneRecipeDisplays.Ascension display) {

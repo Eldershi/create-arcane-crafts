@@ -73,6 +73,64 @@ public final class PrototypeTests {
 
     @SubscribeEvent
     public void registerCommands(RegisterCommandsEvent event) {
+        if (Boolean.getBoolean("arcane.prototype")) {
+            event.getDispatcher().register(Commands.literal("arcane_recipe_network_test")
+                    .requires(source -> source.hasPermission(2))
+                    .executes(context -> {
+                        var checks = RecipeNetworkTests.run(context.getSource().getLevel());
+                        Path result = FMLPaths.GAMEDIR.get().resolve("recipe-network-results.json");
+                        try { Files.writeString(result, new GsonBuilder().setPrettyPrinting().create().toJson(checks)); }
+                        catch (java.io.IOException error) { throw new IllegalStateException(error); }
+                        context.getSource().sendSuccess(() -> Component.literal("Recipe network: " + checks), false);
+                        return 1;
+                    }));
+            event.getDispatcher().register(Commands.literal("arcane_reveal_show")
+                    .requires(source -> source.hasPermission(2))
+                    .then(Commands.argument("tick", com.mojang.brigadier.arguments.IntegerArgumentType.integer(0, 132))
+                            .then(Commands.argument("crimson", com.mojang.brigadier.arguments.BoolArgumentType.bool())
+                                    .then(Commands.argument("rarity", com.mojang.brigadier.arguments.IntegerArgumentType.integer(0, 4))
+                                            .executes(context -> {
+                                                dev.expedition.arcane.chamber.ResearchVisualFixture.show(
+                                                        context.getSource().getLevel(), new BlockPos(0, 65, 0),
+                                                        com.mojang.brigadier.arguments.IntegerArgumentType.getInteger(context, "tick"),
+                                                        com.mojang.brigadier.arguments.BoolArgumentType.getBool(context, "crimson"),
+                                                        com.mojang.brigadier.arguments.IntegerArgumentType.getInteger(context, "rarity"));
+                                                return 1;
+                                            })))));
+            event.getDispatcher().register(Commands.literal("arcane_reveal_play")
+                    .requires(source -> source.hasPermission(2))
+                    .then(Commands.argument("crimson", com.mojang.brigadier.arguments.BoolArgumentType.bool())
+                            .then(Commands.argument("rarity", com.mojang.brigadier.arguments.IntegerArgumentType.integer(0, 4))
+                                    .executes(context -> {
+                                        dev.expedition.arcane.chamber.ResearchVisualFixture.play(
+                                                context.getSource().getLevel(), new BlockPos(0, 65, 0),
+                                                com.mojang.brigadier.arguments.BoolArgumentType.getBool(context, "crimson"),
+                                                com.mojang.brigadier.arguments.IntegerArgumentType.getInteger(context, "rarity"));
+                                        return 1;
+                                    }))));
+            event.getDispatcher().register(Commands.literal("arcane_research_test")
+                    .requires(source -> source.hasPermission(2))
+                    .executes(context -> {
+                        var checks = dev.expedition.arcane.chamber.ResearchPresentationTests.run(
+                                context.getSource().getLevel(), new BlockPos(56, 65, 56));
+                        Path result = FMLPaths.GAMEDIR.get().resolve("research-presentation-results.json");
+                        try { Files.writeString(result, new GsonBuilder().setPrettyPrinting().create().toJson(checks)); }
+                        catch (java.io.IOException error) { throw new IllegalStateException(error); }
+                        context.getSource().sendSuccess(() -> Component.literal("Research presentation: " + checks), false);
+                        return 1;
+                    }));
+            event.getDispatcher().register(Commands.literal("arcane_chamber_test")
+                    .requires(source -> source.hasPermission(2))
+                    .executes(context -> {
+                        var checks = dev.expedition.arcane.chamber.ChamberTests.run(
+                                context.getSource().getLevel(), new BlockPos(64, 65, 56));
+                        Path result = FMLPaths.GAMEDIR.get().resolve("chamber-regression-results.json");
+                        try { Files.writeString(result, new GsonBuilder().setPrettyPrinting().create().toJson(checks)); }
+                        catch (java.io.IOException error) { throw new IllegalStateException(error); }
+                        context.getSource().sendSuccess(() -> Component.literal("Chamber regression: " + checks), false);
+                        return 1;
+                    }));
+        }
         event.getDispatcher().register(Commands.literal("arcane_test")
             .requires(source -> source.hasPermission(2))
             .executes(context -> {
